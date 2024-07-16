@@ -1,7 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
-import { instanceToPlain, plainToInstance } from "class-transformer";
 import { CreateUserDto } from "./dtos/create-user.dto";
 import { UpdateUserDto } from "./dtos/update-user.dto";
 import * as bcrypt from "bcrypt";
@@ -35,17 +38,43 @@ export class UsersService {
     return await this.userRepository.save(newUser);
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    const updateUserDtoData = instanceToPlain(updateUserDto);
-    const updatedUser = plainToInstance(User, updateUserDtoData);
+  async update(
+    user: User,
+    id: number,
+    updateUserDto: UpdateUserDto
+  ): Promise<User> {
+    const foundUser = await this.userRepository.findOneBy({
+      id,
+    });
 
-    await this.userRepository.update(id, updatedUser);
+    if (foundUser === null) {
+      throw new NotFoundException("User not found");
+    }
 
-    return await this.findOneById(id);
+    if (foundUser.id !== user.id) {
+      throw new UnauthorizedException("You cannot update another user");
+    }
+
+    foundUser.email = updateUserDto.email ?? foundUser.email;
+    foundUser.username = updateUserDto.username ?? foundUser.username;
+
+    return await this.userRepository.save(foundUser);
   }
 
-  async remove(id: number): Promise<void> {
-    await this.userRepository.delete(id);
+  async remove(user: User, id: number): Promise<void> {
+    const foundUser = await this.userRepository.findOneBy({
+      id,
+    });
+
+    if (foundUser === null) {
+      throw new NotFoundException("User not found");
+    }
+
+    if (foundUser.id !== user.id) {
+      throw new UnauthorizedException("You cannot delete another user");
+    }
+
+    await this.userRepository.delete(foundUser.id);
   }
 
   async comparePasswords(

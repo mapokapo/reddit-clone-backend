@@ -5,7 +5,8 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Exclude()
 @Entity()
-export class Session {
+export class Community {
+  @Expose()
   @ApiProperty()
   @PrimaryGeneratedColumn()
   id!: number;
@@ -13,13 +14,18 @@ export class Session {
   @Expose()
   @ApiProperty()
   @Column()
-  token!: string;
-
-  @ManyToOne(() => User, user => user.sessions)
-  user!: User;
+  name!: string;
 
   @Expose()
   @ApiProperty()
   @Column()
-  expiresAt!: Date;
+  description!: string;
+
+  @ManyToOne(() => User, user => user.communities)
+  owner!: User;
+
+  @Expose()
+  @ApiProperty()
+  @Column()
+  createdAt!: Date;
 }

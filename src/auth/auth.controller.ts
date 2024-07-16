@@ -10,11 +10,12 @@ import { SessionsService } from "src/sessions/sessions.service";
 import { UsersService } from "src/users/users.service";
 import { LoginRequest } from "./transport/login.request";
 import { RegisterRequest } from "./transport/register.request";
-import { instanceToPlain, plainToInstance } from "class-transformer";
 import { CreateUserDto } from "src/users/dtos/create-user.dto";
 import { Request, Response } from "express";
-import { ApiResponse } from "@nestjs/swagger";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Session } from "src/sessions/entities/session.entity";
 
+@ApiTags("auth")
 @Controller("auth")
 export class AuthController {
   constructor(
@@ -22,21 +23,29 @@ export class AuthController {
     private readonly sessionsService: SessionsService
   ) {}
 
-  @ApiResponse({ status: 200, description: "Login successful" })
+  @ApiResponse({
+    status: 200,
+    description: "Login successful",
+    type: Session,
+  })
   @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiOperation({
+    summary: "Login",
+    operationId: "login",
+  })
   @Post("login")
   async login(
     @Res({ passthrough: true }) res: Response,
-    @Body() loginDto: LoginRequest
-  ) {
-    const user = await this.usersService.findOneByEmail(loginDto.email);
+    @Body() loginRequest: LoginRequest
+  ): Promise<Session> {
+    const user = await this.usersService.findOneByEmail(loginRequest.email);
 
-    if (!user) {
+    if (user === null) {
       throw new UnauthorizedException();
     }
 
     const passwordMatches = await this.usersService.comparePasswords(
-      loginDto.password,
+      loginRequest.password,
       user.passwordHash
     );
 
@@ -54,11 +63,21 @@ export class AuthController {
     return session;
   }
 
-  @ApiResponse({ status: 200, description: "Logout successful" })
+  @ApiResponse({
+    status: 200,
+    description: "Logout successful",
+  })
   @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiOperation({
+    summary: "Logout",
+    operationId: "logout",
+  })
   @Post("logout")
-  async logout(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
-    const token = req.cookies["SESSION_TOKEN"];
+  async logout(
+    @Res({ passthrough: true }) res: Response,
+    @Req() req: Request
+  ): Promise<null> {
+    const token = req.cookies["SESSION_TOKEN"] as string | undefined;
 
     if (!token) {
       throw new UnauthorizedException();
@@ -77,11 +96,21 @@ export class AuthController {
     return null;
   }
 
-  @ApiResponse({ status: 200, description: "Register successful" })
+  @ApiResponse({
+    status: 200,
+    description: "Register successful",
+  })
+  @ApiResponse({ status: 400, description: "Bad request" })
+  @ApiOperation({
+    summary: "Register",
+    operationId: "register",
+  })
   @Post("register")
-  async register(@Body() registerDto: RegisterRequest) {
-    const registerDtoData = instanceToPlain(registerDto);
-    const createUserDto = plainToInstance(CreateUserDto, registerDtoData);
+  async register(@Body() registerRequest: RegisterRequest): Promise<null> {
+    const createUserDto = new CreateUserDto();
+    createUserDto.email = registerRequest.email;
+    createUserDto.username = registerRequest.username;
+    createUserDto.password = registerRequest.password;
 
     await this.usersService.create(createUserDto);
 

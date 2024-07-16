@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 import { HttpAdapterHost } from "@nestjs/core";
 import { QueryFailedError } from "typeorm";
+import { ErrorResponse } from "./transport/error.response";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -21,21 +22,31 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
 
     if (exception instanceof HttpException) {
-      const responseBody = {
+      const responseBody: ErrorResponse = {
         statusCode: exception.getStatus(),
         timestamp: new Date().toISOString(),
-        path: httpAdapter.getRequestUrl(ctx.getRequest()),
+        path: httpAdapter.getRequestUrl(ctx.getRequest()) as unknown as string,
+        message: exception.message,
       };
 
       if (exception instanceof BadRequestException) {
-        responseBody["message"] = exception.getResponse()["message"];
+        const exceptionResponse = exception.getResponse();
+        let message: string | undefined;
+
+        if (typeof exceptionResponse === "string") {
+          message = exceptionResponse;
+        } else if ("message" in exceptionResponse) {
+          message = exceptionResponse.message as string;
+        }
+
+        responseBody.message = message;
       }
 
       return httpAdapter.reply(
         ctx.getResponse(),
         responseBody,
         exception.getStatus()
-      );
+      ) as unknown as undefined;
     } else {
       if (exception instanceof QueryFailedError) {
         if (exception.message.includes("UNIQUE constraint failed")) {
@@ -44,11 +55,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
             {
               statusCode: HttpStatus.BAD_REQUEST,
               timestamp: new Date().toISOString(),
-              path: httpAdapter.getRequestUrl(ctx.getRequest()),
+              path: httpAdapter.getRequestUrl(
+                ctx.getRequest()
+              ) as unknown as string,
               message: "Resource already exists",
             },
             HttpStatus.BAD_REQUEST
-          );
+          ) as unknown as undefined;
         }
       }
 
@@ -59,11 +72,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           timestamp: new Date().toISOString(),
-          path: httpAdapter.getRequestUrl(ctx.getRequest()),
+          path: httpAdapter.getRequestUrl(
+            ctx.getRequest()
+          ) as unknown as string,
           message: "Internal server error",
         },
         HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      ) as unknown as undefined;
     }
   }
 }

@@ -7,10 +7,10 @@ export class LoginRequest {
   @Expose()
   @ApiProperty()
   @IsEmail()
-  email: string;
+  email!: string;
 
   @Expose()
   @ApiProperty()
   @IsString()
-  password: string;
+  password!: string;
 }

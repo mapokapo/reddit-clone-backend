@@ -27,7 +27,10 @@ export class SessionsService {
   async create(user: User): Promise<Session> {
     const newSession = new Session();
     newSession.user = user;
-    newSession.token = await bcrypt.hash(`${user.id}-${Date.now()}`, 10);
+    newSession.token = await bcrypt.hash(
+      `${user.id.toString()}-${Date.now().toString()}`,
+      10
+    );
     newSession.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
 
     return await this.sessionRepository.save(newSession);

@@ -6,20 +6,22 @@ import { User } from "./users/entities/user.entity";
 import { SessionsModule } from "./sessions/sessions.module";
 import { Session } from "./sessions/entities/session.entity";
 import { APP_FILTER } from "@nestjs/core";
-import { AllExceptionsFilter } from "./error-handler/error-handler";
-import { AppController } from "./app.controller";
+import { AllExceptionsFilter } from "./exceptions-filters/all-exceptions-filter";
+import { CommunitiesModule } from "./communities/communities.module";
+import { Community } from "./communities/entities/community.entity";
 
 @Module({
   imports: [
+    AuthModule,
+    CommunitiesModule,
+    SessionsModule,
     TypeOrmModule.forRoot({
       type: "sqlite",
       database: "./sqlite.db",
-      entities: [User, Session],
+      entities: [Community, Session, User],
       synchronize: true,
     }),
-    AuthModule,
     UsersModule,
-    SessionsModule,
   ],
   providers: [
     {
@@ -27,6 +29,5 @@ import { AppController } from "./app.controller";
       useClass: AllExceptionsFilter,
     },
   ],
-  controllers: [AppController],
 })
 export class AppModule {}
