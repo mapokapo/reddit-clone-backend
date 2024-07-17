@@ -35,8 +35,11 @@ export class CommunitiesService {
   }
 
   async findOne(id: number): Promise<Community | null> {
-    return await this.communityRepository.findOneBy({
-      id,
+    return await this.communityRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["owner"],
     });
   }
 
@@ -45,8 +48,11 @@ export class CommunitiesService {
     id: number,
     updateCommunityDto: UpdateCommunityDto
   ): Promise<Community> {
-    const community = await this.communityRepository.findOneBy({
-      id,
+    const community = await this.communityRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["owner"],
     });
 
     if (community === null) {
@@ -67,8 +73,11 @@ export class CommunitiesService {
   }
 
   async remove(user: User, id: number): Promise<void> {
-    const community = await this.communityRepository.findOneBy({
-      id,
+    const community = await this.communityRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["owner"],
     });
 
     if (community === null) {

@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   ParseIntPipe,
+  NotFoundException,
 } from "@nestjs/common";
 import { CommunitiesService } from "./communities.service";
 import { CreateCommunityRequest } from "./transport/create-community.request";
@@ -51,7 +52,7 @@ export class CommunitiesController {
   @ApiOperation({ summary: "Find all communities" })
   @Get()
   async findAll(): Promise<Community[]> {
-    return this.communitiesService.findAll();
+    return await this.communitiesService.findAll();
   }
 
   @ApiResponse({
@@ -61,30 +62,40 @@ export class CommunitiesController {
   })
   @ApiOperation({ summary: "Find a community by ID" })
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.communitiesService.findOne(+id);
+  async findOne(@Param("id", ParseIntPipe) id: number): Promise<Community> {
+    const community = await this.communitiesService.findOne(id);
+
+    if (community === null) {
+      throw new NotFoundException("Community not found");
+    }
+
+    return community;
   }
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Update a community" })
   @UseGuards(AuthGuard)
   @Patch(":id")
-  update(
+  async update(
     @Req() req: AuthenticatedRequest,
     @Param("id", ParseIntPipe) id: number,
     @Body() updateCommunityDto: UpdateCommunityRequest
-  ) {
-    return this.communitiesService.update(req.user, id, updateCommunityDto);
+  ): Promise<Community> {
+    return await this.communitiesService.update(
+      req.user,
+      id,
+      updateCommunityDto
+    );
   }
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Delete a community" })
   @UseGuards(AuthGuard)
   @Delete(":id")
-  remove(
+  async remove(
     @Req() req: AuthenticatedRequest,
     @Param("id", ParseIntPipe) id: number
-  ) {
-    return this.communitiesService.remove(req.user, id);
+  ): Promise<void> {
+    await this.communitiesService.remove(req.user, id);
   }
 }
