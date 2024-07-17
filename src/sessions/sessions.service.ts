@@ -4,6 +4,7 @@ import { Session } from "./entities/session.entity";
 import { Repository } from "typeorm";
 import { User } from "src/users/entities/user.entity";
 import * as bcrypt from "bcrypt";
+import { Response } from "express";
 
 @Injectable()
 export class SessionsService {
@@ -44,5 +45,14 @@ export class SessionsService {
 
   async delete(session: Session): Promise<void> {
     await this.sessionRepository.delete(session.id);
+  }
+
+  async createAndSetSessionCookie(res: Response, user: User): Promise<void> {
+    const session = await this.create(user);
+
+    res.cookie("SESSION_TOKEN", session.token, {
+      httpOnly: true,
+      expires: session.expiresAt,
+    });
   }
 }

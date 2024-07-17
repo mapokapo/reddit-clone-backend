@@ -1,19 +1,23 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from "@nestjs/common";
 import { SessionsService } from "src/sessions/sessions.service";
 import { UsersService } from "src/users/users.service";
-import { LoginRequest } from "./transport/login.request";
 import { RegisterRequest } from "./transport/register.request";
 import { CreateUserDto } from "src/users/dtos/create-user.dto";
 import { Request, Response } from "express";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Session } from "src/sessions/entities/session.entity";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { AuthenticatedRequest } from "./authenticated-request";
+import { LocalAuthGuard } from "./guards/local.guard";
+import { LoginRequest } from "./transport/login.request";
+import { GoogleAuthGuard } from "./guards/google.guard";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -26,41 +30,30 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: "Login successful",
-    type: Session,
+    headers: {
+      "Set-Cookie": {
+        description: "Session token",
+        schema: {
+          type: "string",
+        },
+      },
+    },
   })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   @ApiOperation({
     summary: "Login",
     operationId: "login",
   })
+  @ApiBody({
+    type: LoginRequest,
+  })
+  @UseGuards(LocalAuthGuard)
   @Post("login")
   async login(
-    @Res({ passthrough: true }) res: Response,
-    @Body() loginRequest: LoginRequest
-  ): Promise<Session> {
-    const user = await this.usersService.findOneByEmail(loginRequest.email);
-
-    if (user === null) {
-      throw new UnauthorizedException();
-    }
-
-    const passwordMatches = await this.usersService.comparePasswords(
-      loginRequest.password,
-      user.passwordHash
-    );
-
-    if (!passwordMatches) {
-      throw new UnauthorizedException();
-    }
-
-    const session = await this.sessionsService.create(user);
-
-    res.cookie("SESSION_TOKEN", session.token, {
-      httpOnly: true,
-      expires: session.expiresAt,
-    });
-
-    return session;
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<void> {
+    await this.sessionsService.createAndSetSessionCookie(res, req.user);
   }
 
   @ApiResponse({
@@ -74,8 +67,8 @@ export class AuthController {
   })
   @Post("logout")
   async logout(
-    @Res({ passthrough: true }) res: Response,
-    @Req() req: Request
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
   ): Promise<null> {
     const token = req.cookies["SESSION_TOKEN"] as string | undefined;
 
@@ -109,11 +102,46 @@ export class AuthController {
   async register(@Body() registerRequest: RegisterRequest): Promise<null> {
     const createUserDto = new CreateUserDto();
     createUserDto.email = registerRequest.email;
-    createUserDto.username = registerRequest.username;
+    createUserDto.name = registerRequest.name;
     createUserDto.password = registerRequest.password;
 
     await this.usersService.create(createUserDto);
 
     return null;
+  }
+
+  @ApiResponse({
+    status: 302,
+    description: "Redirect to Google sign-in",
+  })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiOperation({
+    summary: "Initiate sign in with Google",
+    operationId: "signInWithGoogle",
+  })
+  @UseGuards(GoogleAuthGuard)
+  @Get("google")
+  async signInWithGoogle(): Promise<void> {
+    // This method is intentionally empty - all of the logic is handled by the GoogleAuthGuard
+  }
+
+  @ApiResponse({
+    status: 200,
+    description: "Sign in with Google successful",
+  })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiOperation({
+    summary: "Sign in with Google callback",
+    operationId: "signInWithGoogleCallback",
+  })
+  @UseGuards(GoogleAuthGuard)
+  @Get("google/callback")
+  async signInWithGoogleCallback(
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<void> {
+    await this.sessionsService.createAndSetSessionCookie(res, req.user);
+
+    res.redirect("http://localhost:3000/");
   }
 }

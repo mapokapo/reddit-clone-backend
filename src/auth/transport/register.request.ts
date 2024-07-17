@@ -8,7 +8,7 @@ export class RegisterRequest {
 
   @ApiProperty()
   @IsString()
-  username!: string;
+  name!: string;
 
   @ApiProperty()
   @IsString()

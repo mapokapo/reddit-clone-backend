@@ -11,7 +11,7 @@ import {
   ParseIntPipe,
   NotFoundException,
 } from "@nestjs/common";
-import { AuthGuard } from "src/auth/auth.guard";
+import { AuthGuard } from "src/auth/guards/auth.guard";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthenticatedRequest } from "src/auth/authenticated-request";
 import { Post as PostEntity } from "./entities/post.entity";

@@ -34,12 +34,21 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const newUser = new User();
-    newUser.email = createUserDto.email;
-    newUser.username = createUserDto.username;
-    newUser.passwordHash = await bcrypt.hash(createUserDto.password, 10);
+    const user = await this.findOneByEmail(createUserDto.email);
 
-    return await this.userRepository.save(newUser);
+    if (user !== null) {
+      throw new UnauthorizedException("User already exists");
+    } else {
+      const newUser = new User();
+      newUser.email = createUserDto.email;
+      newUser.name = createUserDto.name;
+      newUser.passwordHash =
+        createUserDto.password === null
+          ? undefined
+          : await bcrypt.hash(createUserDto.password, 10);
+
+      return await this.userRepository.save(newUser);
+    }
   }
 
   async update(
@@ -62,7 +71,7 @@ export class UsersService {
     }
 
     foundUser.email = updateUserDto.email ?? foundUser.email;
-    foundUser.username = updateUserDto.username ?? foundUser.username;
+    foundUser.name = updateUserDto.name ?? foundUser.name;
 
     return await this.userRepository.save(foundUser);
   }

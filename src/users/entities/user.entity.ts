@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose } from "class-transformer";
 import { Community } from "src/communities/entities/community.entity";
+import { OAuthAccount } from "src/oauth/entities/oauth-account.entity";
 import { Post } from "src/posts/entities/post.entity";
 import { Session } from "src/sessions/entities/session.entity";
 import { Vote } from "src/votes/vote.entity";
@@ -29,13 +30,16 @@ export class User {
 
   @Expose()
   @ApiProperty()
-  @Column({
-    unique: true,
-  })
-  username!: string;
-
   @Column()
-  passwordHash!: string;
+  name!: string;
+
+  @Column({
+    nullable: true,
+  })
+  passwordHash?: string;
+
+  @OneToMany(() => OAuthAccount, account => account.user)
+  accounts!: OAuthAccount[];
 
   @OneToMany(() => Session, session => session.user)
   sessions!: Session[];

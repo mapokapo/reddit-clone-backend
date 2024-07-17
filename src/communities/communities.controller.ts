@@ -14,11 +14,11 @@ import {
 import { CommunitiesService } from "./communities.service";
 import { CreateCommunityRequest } from "./transport/create-community.request";
 import { UpdateCommunityRequest } from "./transport/update-community.request";
-import { AuthGuard } from "src/auth/auth.guard";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthenticatedRequest } from "src/auth/authenticated-request";
 import { CreateCommunityDto } from "./dtos/create-community.dto";
 import { Community } from "./entities/community.entity";
+import { AuthGuard } from "src/auth/guards/auth.guard";
 
 @ApiTags("communities")
 @Controller("communities")

@@ -12,17 +12,20 @@ import { Community } from "./communities/entities/community.entity";
 import { PostsModule } from "./posts/posts.module";
 import { Post } from "./posts/entities/post.entity";
 import { Vote } from "./votes/vote.entity";
+import { OAuthModule } from "./oauth/oauth.module";
+import { OAuthAccount } from "./oauth/entities/oauth-account.entity";
 
 @Module({
   imports: [
     AuthModule,
     CommunitiesModule,
+    OAuthModule,
     PostsModule,
     SessionsModule,
     TypeOrmModule.forRoot({
       type: "sqlite",
       database: "./sqlite.db",
-      entities: [Community, Post, Session, User, Vote],
+      entities: [Community, OAuthAccount, Post, Session, User, Vote],
       synchronize: true,
     }),
     UsersModule,
