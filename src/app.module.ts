@@ -11,6 +11,7 @@ import { CommunitiesModule } from "./communities/communities.module";
 import { Community } from "./communities/entities/community.entity";
 import { PostsModule } from "./posts/posts.module";
 import { Post } from "./posts/entities/post.entity";
+import { Vote } from "./votes/vote.entity";
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { Post } from "./posts/entities/post.entity";
     TypeOrmModule.forRoot({
       type: "sqlite",
       database: "./sqlite.db",
-      entities: [Community, Post, Session, User],
+      entities: [Community, Post, Session, User, Vote],
       synchronize: true,
     }),
     UsersModule,
