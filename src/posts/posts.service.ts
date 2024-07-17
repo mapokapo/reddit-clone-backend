@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreatePostDto } from "./dto/create-post.dto";
-import { UpdatePostDto } from "./dto/update-post.dto";
+import { CreatePostDto } from "./dtos/create-post.dto";
+import { UpdatePostDto } from "./dtos/update-post.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Post } from "./entities/post.entity";
 import { Repository } from "typeorm";

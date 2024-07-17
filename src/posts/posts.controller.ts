@@ -17,7 +17,7 @@ import { AuthenticatedRequest } from "src/auth/authenticated-request";
 import { Post as PostEntity } from "./entities/post.entity";
 import { PostsService } from "./posts.service";
 import { CreatePostRequest } from "./transport/create-post.request";
-import { CreatePostDto } from "./dto/create-post.dto";
+import { CreatePostDto } from "./dtos/create-post.dto";
 import { UpdatePostRequest } from "./transport/update-post.request";
 
 @ApiTags("posts")
