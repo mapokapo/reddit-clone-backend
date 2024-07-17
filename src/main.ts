@@ -14,9 +14,6 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       forbidUnknownValues: true,
-      transformOptions: {
-        excludeExtraneousValues: true,
-      },
     })
   );
   app.use(cookieParser());
