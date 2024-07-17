@@ -9,16 +9,19 @@ import { APP_FILTER } from "@nestjs/core";
 import { AllExceptionsFilter } from "./exceptions-filters/all-exceptions-filter";
 import { CommunitiesModule } from "./communities/communities.module";
 import { Community } from "./communities/entities/community.entity";
+import { PostsModule } from "./posts/posts.module";
+import { Post } from "./posts/entities/post.entity";
 
 @Module({
   imports: [
     AuthModule,
     CommunitiesModule,
+    PostsModule,
     SessionsModule,
     TypeOrmModule.forRoot({
       type: "sqlite",
       database: "./sqlite.db",
-      entities: [Community, Session, User],
+      entities: [Community, Post, Session, User],
       synchronize: true,
     }),
     UsersModule,

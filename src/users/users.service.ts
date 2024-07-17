@@ -22,7 +22,6 @@ export class UsersService {
       where: {
         email,
       },
-      relations: ["sessions", "communities"],
     });
   }
 
@@ -31,7 +30,6 @@ export class UsersService {
       where: {
         id,
       },
-      relations: ["sessions", "communities"],
     });
   }
 
@@ -53,7 +51,6 @@ export class UsersService {
       where: {
         id,
       },
-      relations: ["sessions", "communities"],
     });
 
     if (foundUser === null) {
@@ -75,7 +72,6 @@ export class UsersService {
       where: {
         id,
       },
-      relations: ["sessions", "communities"],
     });
 
     if (foundUser === null) {

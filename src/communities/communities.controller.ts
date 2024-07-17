@@ -79,12 +79,12 @@ export class CommunitiesController {
   async update(
     @Req() req: AuthenticatedRequest,
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateCommunityDto: UpdateCommunityRequest
+    @Body() updateCommunityRequest: UpdateCommunityRequest
   ): Promise<Community> {
     return await this.communitiesService.update(
       req.user,
       id,
-      updateCommunityDto
+      updateCommunityRequest
     );
   }
 
@@ -97,5 +97,27 @@ export class CommunitiesController {
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
     await this.communitiesService.remove(req.user, id);
+  }
+
+  @ApiResponse({ status: 204, description: "No content" })
+  @ApiOperation({ summary: "Join a community" })
+  @UseGuards(AuthGuard)
+  @Post(":id/join")
+  async join(
+    @Req() req: AuthenticatedRequest,
+    @Param("id", ParseIntPipe) id: number
+  ): Promise<void> {
+    await this.communitiesService.join(req.user, id);
+  }
+
+  @ApiResponse({ status: 204, description: "No content" })
+  @ApiOperation({ summary: "Leave a community" })
+  @UseGuards(AuthGuard)
+  @Post(":id/leave")
+  async leave(
+    @Req() req: AuthenticatedRequest,
+    @Param("id", ParseIntPipe) id: number
+  ): Promise<void> {
+    await this.communitiesService.leave(req.user, id);
   }
 }

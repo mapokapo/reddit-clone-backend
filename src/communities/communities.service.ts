@@ -26,6 +26,7 @@ export class CommunitiesService {
     community.description = createCommunityDto.description;
     community.owner = user;
     community.createdAt = new Date();
+    community.members = [user];
 
     return await this.communityRepository.save(community);
   }
@@ -39,7 +40,6 @@ export class CommunitiesService {
       where: {
         id,
       },
-      relations: ["owner"],
     });
   }
 
@@ -52,7 +52,6 @@ export class CommunitiesService {
       where: {
         id,
       },
-      relations: ["owner"],
     });
 
     if (community === null) {
@@ -77,7 +76,6 @@ export class CommunitiesService {
       where: {
         id,
       },
-      relations: ["owner"],
     });
 
     if (community === null) {
@@ -91,5 +89,57 @@ export class CommunitiesService {
     }
 
     await this.communityRepository.remove(community);
+  }
+
+  async join(user: User, id: number): Promise<void> {
+    const community = await this.communityRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["members"],
+    });
+
+    if (community === null) {
+      throw new NotFoundException("Community not found");
+    }
+
+    if (community.members.some(member => member.id === user.id)) {
+      throw new UnauthorizedException(
+        "You are already a member of this community"
+      );
+    }
+
+    community.members.push(user);
+
+    await this.communityRepository.save(community);
+  }
+
+  async leave(user: User, id: number): Promise<void> {
+    const community = await this.communityRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["members"],
+    });
+
+    if (community === null) {
+      throw new NotFoundException("Community not found");
+    }
+
+    if (!community.members.some(member => member.id === user.id)) {
+      throw new UnauthorizedException("You are not a member of this community");
+    }
+
+    if (community.owner.id === user.id) {
+      throw new UnauthorizedException(
+        "You are the owner of this community and cannot leave"
+      );
+    }
+
+    community.members = community.members.filter(
+      member => member.id !== user.id
+    );
+
+    await this.communityRepository.save(community);
   }
 }
