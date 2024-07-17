@@ -2,11 +2,13 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose, Transform } from "class-transformer";
 import { Community } from "src/communities/entities/community.entity";
 import { User } from "src/users/entities/user.entity";
+import { Vote } from "src/votes/vote.entity";
 import {
   Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
@@ -48,6 +50,22 @@ export class Post {
     onDelete: "CASCADE",
   })
   author!: User;
+
+  // eslint-disable-next-line @darraghor/nestjs-typed/api-property-returning-array-should-set-array
+  @Expose()
+  @Transform(
+    ({ value }: { value: Vote[] }) =>
+      value.filter(v => v.isUpvote).length -
+      value.filter(v => !v.isUpvote).length
+  )
+  @ApiProperty({
+    type: Number,
+  })
+  @OneToMany(() => Vote, vote => vote.post, {
+    eager: true,
+    cascade: true,
+  })
+  votes!: Vote[];
 
   @Expose()
   @ApiProperty()

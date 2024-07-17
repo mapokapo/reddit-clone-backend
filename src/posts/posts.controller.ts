@@ -108,4 +108,40 @@ export class PostsController {
   ): Promise<void> {
     await this.postsService.remove(req.user, communityId, id);
   }
+
+  @ApiResponse({ status: 204, description: "No content" })
+  @ApiOperation({ summary: "Upvote a post" })
+  @UseGuards(AuthGuard)
+  @Post(":communityId/:id/upvote")
+  async upvote(
+    @Req() req: AuthenticatedRequest,
+    @Param("communityId", ParseIntPipe) communityId: number,
+    @Param("id", ParseIntPipe) id: number
+  ): Promise<void> {
+    await this.postsService.vote(req.user, communityId, id, true);
+  }
+
+  @ApiResponse({ status: 204, description: "No content" })
+  @ApiOperation({ summary: "Downvote a post" })
+  @UseGuards(AuthGuard)
+  @Post(":communityId/:id/downvote")
+  async downvote(
+    @Req() req: AuthenticatedRequest,
+    @Param("communityId", ParseIntPipe) communityId: number,
+    @Param("id", ParseIntPipe) id: number
+  ): Promise<void> {
+    await this.postsService.vote(req.user, communityId, id, false);
+  }
+
+  @ApiResponse({ status: 204, description: "No content" })
+  @ApiOperation({ summary: "Remove a vote from a post" })
+  @UseGuards(AuthGuard)
+  @Delete(":communityId/:id/unvote")
+  async unvote(
+    @Req() req: AuthenticatedRequest,
+    @Param("communityId", ParseIntPipe) communityId: number,
+    @Param("id", ParseIntPipe) id: number
+  ): Promise<void> {
+    await this.postsService.unvote(req.user, communityId, id);
+  }
 }

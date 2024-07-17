@@ -3,6 +3,7 @@ import { Exclude, Expose } from "class-transformer";
 import { Community } from "src/communities/entities/community.entity";
 import { Post } from "src/posts/entities/post.entity";
 import { Session } from "src/sessions/entities/session.entity";
+import { Vote } from "src/votes/vote.entity";
 import {
   Column,
   Entity,
@@ -44,6 +45,9 @@ export class User {
 
   @OneToMany(() => Post, post => post.author)
   posts!: Post[];
+
+  @OneToMany(() => Vote, vote => vote.voter)
+  votes!: Vote[];
 
   @ManyToMany(() => Community, community => community.members)
   communities!: Community[];
