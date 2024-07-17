@@ -13,14 +13,20 @@ export class SessionsService {
   ) {}
 
   async findOneByToken(token: string): Promise<Session | null> {
-    return await this.sessionRepository.findOneBy({
-      token,
+    return await this.sessionRepository.findOne({
+      where: {
+        token,
+      },
+      relations: ["user"],
     });
   }
 
   async findOneById(id: number): Promise<Session | null> {
-    return await this.sessionRepository.findOneBy({
-      id,
+    return await this.sessionRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["user"],
     });
   }
 

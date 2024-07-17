@@ -18,14 +18,20 @@ export class UsersService {
   ) {}
 
   async findOneByEmail(email: string): Promise<User | null> {
-    return await this.userRepository.findOneBy({
-      email,
+    return await this.userRepository.findOne({
+      where: {
+        email,
+      },
+      relations: ["sessions", "communities"],
     });
   }
 
   async findOneById(id: number): Promise<User | null> {
-    return await this.userRepository.findOneBy({
-      id,
+    return await this.userRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["sessions", "communities"],
     });
   }
 
@@ -43,8 +49,11 @@ export class UsersService {
     id: number,
     updateUserDto: UpdateUserDto
   ): Promise<User> {
-    const foundUser = await this.userRepository.findOneBy({
-      id,
+    const foundUser = await this.userRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["sessions", "communities"],
     });
 
     if (foundUser === null) {
@@ -62,8 +71,11 @@ export class UsersService {
   }
 
   async remove(user: User, id: number): Promise<void> {
-    const foundUser = await this.userRepository.findOneBy({
-      id,
+    const foundUser = await this.userRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["sessions", "communities"],
     });
 
     if (foundUser === null) {
