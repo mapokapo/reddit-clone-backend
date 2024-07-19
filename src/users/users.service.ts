@@ -7,7 +7,6 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
 import { CreateUserDto } from "./dtos/create-user.dto";
 import { UpdateUserDto } from "./dtos/update-user.dto";
-import * as bcrypt from "bcrypt";
 import { Repository } from "typeorm";
 
 @Injectable()
@@ -33,19 +32,24 @@ export class UsersService {
     });
   }
 
+  async findOneByFirebaseUid(uid: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: {
+        firebaseUid: uid,
+      },
+    });
+  }
+
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.findOneByEmail(createUserDto.email);
+    const user = await this.findOneByFirebaseUid(createUserDto.firebaseUid);
 
     if (user !== null) {
       throw new UnauthorizedException("User already exists");
     } else {
       const newUser = new User();
+      newUser.firebaseUid = createUserDto.firebaseUid;
       newUser.email = createUserDto.email;
       newUser.name = createUserDto.name;
-      newUser.passwordHash =
-        createUserDto.password === null
-          ? undefined
-          : await bcrypt.hash(createUserDto.password, 10);
 
       return await this.userRepository.save(newUser);
     }
@@ -92,16 +96,5 @@ export class UsersService {
     }
 
     await this.userRepository.delete(foundUser.id);
-  }
-
-  async comparePasswords(
-    password: string,
-    hashedPassword: string
-  ): Promise<boolean> {
-    return await bcrypt.compare(password, hashedPassword);
-  }
-
-  async hashPassword(password: string): Promise<string> {
-    return await bcrypt.hash(password, 10);
   }
 }

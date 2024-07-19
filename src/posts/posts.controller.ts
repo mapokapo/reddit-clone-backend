@@ -6,19 +6,18 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
-  Req,
   ParseIntPipe,
   NotFoundException,
 } from "@nestjs/common";
-import { AuthGuard } from "src/auth/guards/auth.guard";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { AuthenticatedRequest } from "src/auth/authenticated-request";
 import { Post as PostEntity } from "./entities/post.entity";
 import { PostsService } from "./posts.service";
 import { CreatePostRequest } from "./transport/create-post.request";
 import { CreatePostDto } from "./dtos/create-post.dto";
 import { UpdatePostRequest } from "./transport/update-post.request";
+import { UseAuth } from "src/auth/use-auth.decorator";
+import { ReqUser } from "src/auth/req-user.decorator";
+import { User } from "src/users/entities/user.entity";
 
 @ApiTags("posts")
 @Controller("posts")
@@ -30,10 +29,10 @@ export class PostsController {
     summary: "Create a new post in a community",
     operationId: "create",
   })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Post(":communityId")
   async create(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("communityId", ParseIntPipe) communityId: number,
     @Body() createPostRequest: CreatePostRequest
   ): Promise<PostEntity> {
@@ -42,7 +41,7 @@ export class PostsController {
     createPostDto.content = createPostRequest.content;
     createPostDto.communityId = communityId;
 
-    return await this.postsService.create(req.user, createPostDto);
+    return await this.postsService.create(reqUser, createPostDto);
   }
 
   @ApiResponse({
@@ -81,16 +80,16 @@ export class PostsController {
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Update a post in a community" })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Patch(":communityId/:id")
   async update(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number,
     @Body() updatePostRequest: UpdatePostRequest
   ): Promise<PostEntity> {
     return await this.postsService.update(
-      req.user,
+      reqUser,
       communityId,
       id,
       updatePostRequest
@@ -99,49 +98,49 @@ export class PostsController {
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Delete a post in a community" })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Delete(":communityId/:id")
   async remove(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.postsService.remove(req.user, communityId, id);
+    await this.postsService.remove(reqUser, communityId, id);
   }
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Upvote a post" })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Post(":communityId/:id/upvote")
   async upvote(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.postsService.vote(req.user, communityId, id, true);
+    await this.postsService.vote(reqUser, communityId, id, true);
   }
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Downvote a post" })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Post(":communityId/:id/downvote")
   async downvote(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.postsService.vote(req.user, communityId, id, false);
+    await this.postsService.vote(reqUser, communityId, id, false);
   }
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Remove a vote from a post" })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Delete(":communityId/:id/unvote")
   async unvote(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.postsService.unvote(req.user, communityId, id);
+    await this.postsService.unvote(reqUser, communityId, id);
   }
 }

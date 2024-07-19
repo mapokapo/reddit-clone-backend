@@ -4,10 +4,16 @@ import { CommunitiesController } from "./communities.controller";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Community } from "./entities/community.entity";
 import { AuthModule } from "src/auth/auth.module";
-import { SessionsModule } from "src/sessions/sessions.module";
+import { FirebaseModule } from "src/firebase/firebase.module";
+import { UsersModule } from "src/users/users.module";
 
 @Module({
-  imports: [AuthModule, SessionsModule, TypeOrmModule.forFeature([Community])],
+  imports: [
+    AuthModule,
+    FirebaseModule,
+    TypeOrmModule.forFeature([Community]),
+    UsersModule,
+  ],
   controllers: [CommunitiesController],
   providers: [CommunitiesService],
 })

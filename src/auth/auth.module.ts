@@ -1,25 +1,11 @@
-import { Module } from "@nestjs/common";
-import { AuthController } from "./auth.controller";
+import { forwardRef, Module } from "@nestjs/common";
+import { FirebaseModule } from "src/firebase/firebase.module";
 import { UsersModule } from "src/users/users.module";
-import { SessionsModule } from "src/sessions/sessions.module";
-import { LocalStrategy } from "./strategies/local.strategy";
-import { LocalAuthGuard } from "./guards/local.guard";
-import { GoogleStrategy } from "./strategies/google.strategy";
-import { GoogleAuthGuard } from "./guards/google.guard";
-import { OAuthModule } from "src/oauth/oauth.module";
-import { AuthGuard } from "./guards/auth.guard";
-import { ConfigModule } from "@nestjs/config";
+import { AuthGuard } from "./auth.guard";
 
 @Module({
-  imports: [ConfigModule, OAuthModule, SessionsModule, UsersModule],
-  controllers: [AuthController],
-  providers: [
-    AuthGuard,
-    GoogleAuthGuard,
-    GoogleStrategy,
-    LocalAuthGuard,
-    LocalStrategy,
-  ],
+  imports: [forwardRef(() => UsersModule), FirebaseModule],
+  providers: [AuthGuard],
   exports: [AuthGuard],
 })
 export class AuthModule {}

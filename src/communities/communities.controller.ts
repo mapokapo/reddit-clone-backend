@@ -6,8 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
-  Req,
   ParseIntPipe,
   NotFoundException,
 } from "@nestjs/common";
@@ -15,10 +13,11 @@ import { CommunitiesService } from "./communities.service";
 import { CreateCommunityRequest } from "./transport/create-community.request";
 import { UpdateCommunityRequest } from "./transport/update-community.request";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { AuthenticatedRequest } from "src/auth/authenticated-request";
 import { CreateCommunityDto } from "./dtos/create-community.dto";
 import { Community } from "./entities/community.entity";
-import { AuthGuard } from "src/auth/guards/auth.guard";
+import { UseAuth } from "src/auth/use-auth.decorator";
+import { ReqUser } from "src/auth/req-user.decorator";
+import { User } from "src/users/entities/user.entity";
 
 @ApiTags("communities")
 @Controller("communities")
@@ -30,17 +29,17 @@ export class CommunitiesController {
     summary: "Create a new community",
     operationId: "create",
   })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Post()
   async create(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Body() createCommunityRequest: CreateCommunityRequest
   ): Promise<Community> {
     const createCommunityDto = new CreateCommunityDto();
     createCommunityDto.name = createCommunityRequest.name;
     createCommunityDto.description = createCommunityRequest.description;
 
-    return await this.communitiesService.create(req.user, createCommunityDto);
+    return await this.communitiesService.create(reqUser, createCommunityDto);
   }
 
   @ApiResponse({
@@ -74,15 +73,15 @@ export class CommunitiesController {
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Update a community" })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Patch(":id")
   async update(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("id", ParseIntPipe) id: number,
     @Body() updateCommunityRequest: UpdateCommunityRequest
   ): Promise<Community> {
     return await this.communitiesService.update(
-      req.user,
+      reqUser,
       id,
       updateCommunityRequest
     );
@@ -90,34 +89,34 @@ export class CommunitiesController {
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Delete a community" })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Delete(":id")
   async remove(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.communitiesService.remove(req.user, id);
+    await this.communitiesService.remove(reqUser, id);
   }
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Join a community" })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Post(":id/join")
   async join(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.communitiesService.join(req.user, id);
+    await this.communitiesService.join(reqUser, id);
   }
 
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({ summary: "Leave a community" })
-  @UseGuards(AuthGuard)
+  @UseAuth()
   @Post(":id/leave")
   async leave(
-    @Req() req: AuthenticatedRequest,
+    @ReqUser() reqUser: User,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.communitiesService.leave(req.user, id);
+    await this.communitiesService.leave(reqUser, id);
   }
 }
