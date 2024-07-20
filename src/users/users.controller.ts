@@ -13,7 +13,10 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiResponse({ status: 201, description: "User created" })
-  @ApiOperation({ summary: "Create a new user using a Firebase ID token" })
+  @ApiOperation({
+    summary: "Create a new user using a Firebase ID token",
+    operationId: "createUser",
+  })
   @UseAuth("no-profile")
   @Post()
   async create(

@@ -48,7 +48,7 @@ export class CommunitiesController {
     type: Community,
     isArray: true,
   })
-  @ApiOperation({ summary: "Find all communities" })
+  @ApiOperation({ summary: "Find all communities", operationId: "findAll" })
   @Get()
   async findAll(): Promise<Community[]> {
     return await this.communitiesService.findAll();
@@ -59,7 +59,7 @@ export class CommunitiesController {
     description: "OK",
     type: Community,
   })
-  @ApiOperation({ summary: "Find a community by ID" })
+  @ApiOperation({ summary: "Find a community by ID", operationId: "findOne" })
   @Get(":id")
   async findOne(@Param("id", ParseIntPipe) id: number): Promise<Community> {
     const community = await this.communitiesService.findOne(id);
@@ -72,7 +72,7 @@ export class CommunitiesController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Update a community" })
+  @ApiOperation({ summary: "Update a community", operationId: "update" })
   @UseAuth()
   @Patch(":id")
   async update(
@@ -88,7 +88,7 @@ export class CommunitiesController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Delete a community" })
+  @ApiOperation({ summary: "Delete a community", operationId: "remove" })
   @UseAuth()
   @Delete(":id")
   async remove(
@@ -99,7 +99,7 @@ export class CommunitiesController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Join a community" })
+  @ApiOperation({ summary: "Join a community", operationId: "join" })
   @UseAuth()
   @Post(":id/join")
   async join(
@@ -110,7 +110,7 @@ export class CommunitiesController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Leave a community" })
+  @ApiOperation({ summary: "Leave a community", operationId: "leave" })
   @UseAuth()
   @Post(":id/leave")
   async leave(

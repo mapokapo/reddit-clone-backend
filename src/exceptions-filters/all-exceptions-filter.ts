@@ -31,7 +31,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
       if (exception instanceof BadRequestException) {
         const exceptionResponse = exception.getResponse();
-        let message: string | undefined;
+        let message = "Bad request";
 
         if (typeof exceptionResponse === "string") {
           message = exceptionResponse;
