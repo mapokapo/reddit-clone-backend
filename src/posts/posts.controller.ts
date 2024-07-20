@@ -27,7 +27,7 @@ export class PostsController {
   @ApiResponse({ status: 201, description: "Created" })
   @ApiOperation({
     summary: "Create a new post in a community",
-    operationId: "create",
+    operationId: "createPost",
   })
   @UseAuth()
   @Post(":communityId")
@@ -52,7 +52,7 @@ export class PostsController {
   })
   @ApiOperation({
     summary: "Find all posts in a community",
-    operationId: "findAll",
+    operationId: "findAllPosts",
   })
   @Get(":communityId")
   async findAll(
@@ -68,7 +68,7 @@ export class PostsController {
   })
   @ApiOperation({
     summary: "Find a post by ID in a community",
-    operationId: "findOne",
+    operationId: "findOnePost",
   })
   @Get(":communityId/:id")
   async findOne(
@@ -87,7 +87,7 @@ export class PostsController {
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({
     summary: "Update a post in a community",
-    operationId: "update",
+    operationId: "updatePost",
   })
   @UseAuth()
   @Patch(":communityId/:id")
@@ -108,7 +108,7 @@ export class PostsController {
   @ApiResponse({ status: 204, description: "No content" })
   @ApiOperation({
     summary: "Delete a post in a community",
-    operationId: "remove",
+    operationId: "removePost",
   })
   @UseAuth()
   @Delete(":communityId/:id")
@@ -121,7 +121,7 @@ export class PostsController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Upvote a post", operationId: "upvote" })
+  @ApiOperation({ summary: "Upvote a post", operationId: "upvotePost" })
   @UseAuth()
   @Post(":communityId/:id/upvote")
   async upvote(
@@ -133,7 +133,7 @@ export class PostsController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Downvote a post", operationId: "downvote" })
+  @ApiOperation({ summary: "Downvote a post", operationId: "downvotePost" })
   @UseAuth()
   @Post(":communityId/:id/downvote")
   async downvote(
@@ -145,7 +145,10 @@ export class PostsController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Remove a vote from a post", operationId: "unvote" })
+  @ApiOperation({
+    summary: "Remove a vote from a post",
+    operationId: "unvotePost",
+  })
   @UseAuth()
   @Delete(":communityId/:id/unvote")
   async unvote(

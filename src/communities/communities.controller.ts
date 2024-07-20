@@ -27,7 +27,7 @@ export class CommunitiesController {
   @ApiResponse({ status: 201, description: "Created" })
   @ApiOperation({
     summary: "Create a new community",
-    operationId: "create",
+    operationId: "createCommunity",
   })
   @UseAuth()
   @Post()
@@ -48,7 +48,10 @@ export class CommunitiesController {
     type: Community,
     isArray: true,
   })
-  @ApiOperation({ summary: "Find all communities", operationId: "findAll" })
+  @ApiOperation({
+    summary: "Find all communities",
+    operationId: "findAllCommunities",
+  })
   @Get()
   async findAll(): Promise<Community[]> {
     return await this.communitiesService.findAll();
@@ -59,7 +62,10 @@ export class CommunitiesController {
     description: "OK",
     type: Community,
   })
-  @ApiOperation({ summary: "Find a community by ID", operationId: "findOne" })
+  @ApiOperation({
+    summary: "Find a community by ID",
+    operationId: "findOneCommunity",
+  })
   @Get(":id")
   async findOne(@Param("id", ParseIntPipe) id: number): Promise<Community> {
     const community = await this.communitiesService.findOne(id);
@@ -72,7 +78,10 @@ export class CommunitiesController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Update a community", operationId: "update" })
+  @ApiOperation({
+    summary: "Update a community",
+    operationId: "updateCommunity",
+  })
   @UseAuth()
   @Patch(":id")
   async update(
@@ -88,7 +97,10 @@ export class CommunitiesController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Delete a community", operationId: "remove" })
+  @ApiOperation({
+    summary: "Delete a community",
+    operationId: "removeCommunity",
+  })
   @UseAuth()
   @Delete(":id")
   async remove(
@@ -99,7 +111,7 @@ export class CommunitiesController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Join a community", operationId: "join" })
+  @ApiOperation({ summary: "Join a community", operationId: "joinCommunity" })
   @UseAuth()
   @Post(":id/join")
   async join(
@@ -110,7 +122,7 @@ export class CommunitiesController {
   }
 
   @ApiResponse({ status: 204, description: "No content" })
-  @ApiOperation({ summary: "Leave a community", operationId: "leave" })
+  @ApiOperation({ summary: "Leave a community", operationId: "leaveCommunity" })
   @UseAuth()
   @Post(":id/leave")
   async leave(
