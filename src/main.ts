@@ -18,6 +18,10 @@ async function bootstrap() {
     })
   );
 
+  app.enableCors({
+    origin: "http://localhost:3000",
+  });
+
   const configService = app.get(ConfigService);
 
   const openApiConfig = new DocumentBuilder()
@@ -28,7 +32,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, openApiConfig);
 
-  if (configService.getOrThrow("NODE_ENV") === "openapi-gen") {
+  if (configService.get("NODE_ENV") === "openapi-gen") {
     await writeFile("openapi.json", JSON.stringify(document, null, 2));
 
     await app.close();
