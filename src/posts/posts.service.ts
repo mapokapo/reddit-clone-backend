@@ -253,4 +253,17 @@ export class PostsService {
 
     await this.postsRepository.save(post);
   }
+
+  async getFeed(user: User): Promise<Post[]> {
+    const posts = await Promise.all(
+      user.communities.map(community =>
+        this.postsRepository.find({
+          where: { community: community },
+          take: 10,
+        })
+      )
+    );
+
+    return posts.flat();
+  }
 }

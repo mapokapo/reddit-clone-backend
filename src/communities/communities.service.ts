@@ -25,7 +25,6 @@ export class CommunitiesService {
     community.name = createCommunityDto.name;
     community.description = createCommunityDto.description;
     community.owner = user;
-    community.createdAt = new Date();
     community.members = [user];
 
     return await this.communityRepository.save(community);

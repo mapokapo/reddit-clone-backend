@@ -158,4 +158,18 @@ export class PostsController {
   ): Promise<void> {
     await this.postsService.unvote(reqUser, communityId, id);
   }
+
+  @ApiResponse({
+    status: 200,
+    description: "OK",
+  })
+  @ApiOperation({
+    summary: "Get a personalized feed of posts for the current user",
+    operationId: "getFeed",
+  })
+  @UseAuth()
+  @Get("feed")
+  async getFeed(@ReqUser() reqUser: User): Promise<PostEntity[]> {
+    return await this.postsService.getFeed(reqUser);
+  }
 }

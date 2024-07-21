@@ -4,6 +4,7 @@ import { Post } from "src/posts/entities/post.entity";
 import { User } from "src/users/entities/user.entity";
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinTable,
   ManyToMany,
@@ -53,6 +54,9 @@ export class Community {
 
   @Expose()
   @ApiProperty()
-  @Column()
+  @CreateDateColumn({
+    type: "datetime",
+    default: () => "CURRENT_TIMESTAMP",
+  })
   createdAt!: Date;
 }

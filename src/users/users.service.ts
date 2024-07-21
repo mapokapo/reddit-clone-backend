@@ -37,6 +37,7 @@ export class UsersService {
       where: {
         firebaseUid: uid,
       },
+      relations: ["communities", "ownedCommunities", "posts", "votes"],
     });
   }
 
