@@ -24,7 +24,7 @@ import { User } from "src/users/entities/user.entity";
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @ApiResponse({ status: 201, description: "Created" })
+  @ApiResponse({ status: 201, description: "Created", type: PostEntity })
   @ApiOperation({
     summary: "Create a new post in a community",
     operationId: "createPost",
@@ -84,7 +84,7 @@ export class PostsController {
     return post;
   }
 
-  @ApiResponse({ status: 204, description: "No content" })
+  @ApiResponse({ status: 200, description: "OK", type: PostEntity })
   @ApiOperation({
     summary: "Update a post in a community",
     operationId: "updatePost",
@@ -163,6 +163,7 @@ export class PostsController {
     status: 200,
     description: "OK",
     type: PostEntity,
+    isArray: true,
   })
   @ApiOperation({
     summary: "Get a personalized feed of posts for the current user",

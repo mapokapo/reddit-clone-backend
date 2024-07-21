@@ -24,7 +24,7 @@ import { User } from "src/users/entities/user.entity";
 export class CommunitiesController {
   constructor(private readonly communitiesService: CommunitiesService) {}
 
-  @ApiResponse({ status: 201, description: "Created" })
+  @ApiResponse({ status: 201, description: "Created", type: Community })
   @ApiOperation({
     summary: "Create a new community",
     operationId: "createCommunity",
@@ -77,7 +77,7 @@ export class CommunitiesController {
     return community;
   }
 
-  @ApiResponse({ status: 204, description: "No content" })
+  @ApiResponse({ status: 200, description: "OK", type: Community })
   @ApiOperation({
     summary: "Update a community",
     operationId: "updateCommunity",

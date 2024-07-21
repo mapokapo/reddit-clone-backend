@@ -6,13 +6,14 @@ import { CreateUserDto } from "./dtos/create-user.dto";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { UseAuth } from "src/auth/use-auth.decorator";
 import { ReqIdToken } from "src/auth/req-id-token.decorator";
+import { User } from "./entities/user.entity";
 
 @ApiTags("users")
 @Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiResponse({ status: 201, description: "User created" })
+  @ApiResponse({ status: 201, description: "User created", type: User })
   @ApiOperation({
     summary: "Create a new user using a Firebase ID token",
     operationId: "createUser",
@@ -22,7 +23,7 @@ export class UsersController {
   async create(
     @ReqIdToken() reqIdToken: DecodedIdToken,
     @Body() createUserRequest: CreateUserRequest
-  ): Promise<void> {
+  ): Promise<User> {
     const email = reqIdToken.email;
 
     if (email === undefined) {
@@ -35,6 +36,6 @@ export class UsersController {
       name: createUserRequest.name,
     };
 
-    await this.usersService.create(createUserDto);
+    return await this.usersService.create(createUserDto);
   }
 }
