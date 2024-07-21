@@ -1,6 +1,7 @@
 import { applyDecorators, SetMetadata, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "./auth.guard";
 import { ApiBearerAuth, ApiUnauthorizedResponse } from "@nestjs/swagger";
+import { ErrorResponse } from "src/exceptions-filters/transport/error.response";
 
 export type AuthMode = "no-profile" | "profile";
 
@@ -35,6 +36,9 @@ export function UseAuth(authMode: AuthMode = "profile") {
     SetMetadata("authMode", authMode),
     UseGuards(AuthGuard),
     ApiBearerAuth(),
-    ApiUnauthorizedResponse({ description: "Unauthorized" })
+    ApiUnauthorizedResponse({
+      description: "Unauthorized",
+      type: ErrorResponse,
+    })
   );
 }

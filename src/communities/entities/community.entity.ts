@@ -35,6 +35,10 @@ export class Community {
     name: "ownerId",
   })
   @Transform(({ value }: { value: User }) => value.id)
+  @ApiProperty({
+    name: "ownerId",
+    type: "number",
+  })
   @ManyToOne(() => User, user => user.ownedCommunities, {
     eager: true,
     onDelete: "CASCADE",

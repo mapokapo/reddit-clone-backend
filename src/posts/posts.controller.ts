@@ -9,7 +9,13 @@ import {
   ParseIntPipe,
   NotFoundException,
 } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import { Post as PostEntity } from "./entities/post.entity";
 import { PostsService } from "./posts.service";
 import { CreatePostRequest } from "./transport/create-post.request";
@@ -24,7 +30,7 @@ import { User } from "src/users/entities/user.entity";
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @ApiResponse({ status: 201, description: "Created", type: PostEntity })
+  @ApiCreatedResponse({ description: "Created", type: PostEntity })
   @ApiOperation({
     summary: "Create a new post in a community",
     operationId: "createPost",
@@ -44,8 +50,7 @@ export class PostsController {
     return await this.postsService.create(reqUser, createPostDto);
   }
 
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "OK",
     type: PostEntity,
     isArray: true,
@@ -61,8 +66,7 @@ export class PostsController {
     return await this.postsService.findAll(communityId);
   }
 
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "OK",
     type: PostEntity,
   })
@@ -84,7 +88,7 @@ export class PostsController {
     return post;
   }
 
-  @ApiResponse({ status: 200, description: "OK", type: PostEntity })
+  @ApiOkResponse({ description: "OK", type: PostEntity })
   @ApiOperation({
     summary: "Update a post in a community",
     operationId: "updatePost",
@@ -105,7 +109,7 @@ export class PostsController {
     );
   }
 
-  @ApiResponse({ status: 204, description: "No content" })
+  @ApiNoContentResponse({ description: "No content" })
   @ApiOperation({
     summary: "Delete a post in a community",
     operationId: "removePost",
@@ -120,7 +124,7 @@ export class PostsController {
     await this.postsService.remove(reqUser, communityId, id);
   }
 
-  @ApiResponse({ status: 204, description: "No content" })
+  @ApiNoContentResponse({ description: "No content" })
   @ApiOperation({ summary: "Upvote a post", operationId: "upvotePost" })
   @UseAuth()
   @Post(":communityId/:id/upvote")
@@ -132,7 +136,7 @@ export class PostsController {
     await this.postsService.vote(reqUser, communityId, id, true);
   }
 
-  @ApiResponse({ status: 204, description: "No content" })
+  @ApiNoContentResponse({ description: "No content" })
   @ApiOperation({ summary: "Downvote a post", operationId: "downvotePost" })
   @UseAuth()
   @Post(":communityId/:id/downvote")
@@ -144,7 +148,7 @@ export class PostsController {
     await this.postsService.vote(reqUser, communityId, id, false);
   }
 
-  @ApiResponse({ status: 204, description: "No content" })
+  @ApiNoContentResponse({ description: "No content" })
   @ApiOperation({
     summary: "Remove a vote from a post",
     operationId: "unvotePost",
@@ -159,8 +163,7 @@ export class PostsController {
     await this.postsService.unvote(reqUser, communityId, id);
   }
 
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "OK",
     type: PostEntity,
     isArray: true,

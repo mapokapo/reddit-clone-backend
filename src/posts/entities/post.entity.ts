@@ -35,6 +35,10 @@ export class Post {
     name: "communityId",
   })
   @Transform(({ value }: { value: Community }) => value.id)
+  @ApiProperty({
+    name: "communityId",
+    type: "number",
+  })
   @ManyToOne(() => Community, community => community.posts, {
     eager: true,
     onDelete: "CASCADE",
@@ -45,6 +49,10 @@ export class Post {
     name: "authorId",
   })
   @Transform(({ value }: { value: User }) => value.id)
+  @ApiProperty({
+    name: "authorId",
+    type: "number",
+  })
   @ManyToOne(() => User, user => user.posts, {
     eager: true,
     onDelete: "CASCADE",
@@ -59,7 +67,7 @@ export class Post {
       value.filter(v => !v.isUpvote).length
   )
   @ApiProperty({
-    type: Number,
+    type: "number",
   })
   @OneToMany(() => Vote, vote => vote.post, {
     eager: true,

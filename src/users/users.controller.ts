@@ -1,6 +1,6 @@
 import { Body, Controller, Post, UnauthorizedException } from "@nestjs/common";
 import { UsersService } from "./users.service";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiCreatedResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { CreateUserRequest } from "./transport/create-user.request";
 import { CreateUserDto } from "./dtos/create-user.dto";
 import { DecodedIdToken } from "firebase-admin/auth";
@@ -13,7 +13,7 @@ import { User } from "./entities/user.entity";
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiResponse({ status: 201, description: "User created", type: User })
+  @ApiCreatedResponse({ description: "User created", type: User })
   @ApiOperation({
     summary: "Create a new user using a Firebase ID token",
     operationId: "createUser",

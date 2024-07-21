@@ -20,14 +20,18 @@ export class User {
   id!: number;
 
   @Expose()
-  @ApiProperty()
+  @ApiProperty({
+    format: "uuid",
+  })
   @Column({
     unique: true,
   })
   firebaseUid!: string;
 
   @Expose()
-  @ApiProperty()
+  @ApiProperty({
+    format: "email",
+  })
   @Column({
     unique: true,
   })

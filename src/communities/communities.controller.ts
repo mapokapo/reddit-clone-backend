@@ -12,7 +12,13 @@ import {
 import { CommunitiesService } from "./communities.service";
 import { CreateCommunityRequest } from "./transport/create-community.request";
 import { UpdateCommunityRequest } from "./transport/update-community.request";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import { CreateCommunityDto } from "./dtos/create-community.dto";
 import { Community } from "./entities/community.entity";
 import { UseAuth } from "src/auth/use-auth.decorator";
@@ -24,7 +30,7 @@ import { User } from "src/users/entities/user.entity";
 export class CommunitiesController {
   constructor(private readonly communitiesService: CommunitiesService) {}
 
-  @ApiResponse({ status: 201, description: "Created", type: Community })
+  @ApiCreatedResponse({ description: "Created", type: Community })
   @ApiOperation({
     summary: "Create a new community",
     operationId: "createCommunity",
@@ -42,8 +48,7 @@ export class CommunitiesController {
     return await this.communitiesService.create(reqUser, createCommunityDto);
   }
 
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "OK",
     type: Community,
     isArray: true,
@@ -57,8 +62,7 @@ export class CommunitiesController {
     return await this.communitiesService.findAll();
   }
 
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "OK",
     type: Community,
   })
@@ -77,7 +81,7 @@ export class CommunitiesController {
     return community;
   }
 
-  @ApiResponse({ status: 200, description: "OK", type: Community })
+  @ApiOkResponse({ description: "OK", type: Community })
   @ApiOperation({
     summary: "Update a community",
     operationId: "updateCommunity",
@@ -96,7 +100,7 @@ export class CommunitiesController {
     );
   }
 
-  @ApiResponse({ status: 204, description: "No content" })
+  @ApiNoContentResponse({ description: "No content" })
   @ApiOperation({
     summary: "Delete a community",
     operationId: "removeCommunity",
@@ -110,7 +114,7 @@ export class CommunitiesController {
     await this.communitiesService.remove(reqUser, id);
   }
 
-  @ApiResponse({ status: 204, description: "No content" })
+  @ApiNoContentResponse({ description: "No content" })
   @ApiOperation({ summary: "Join a community", operationId: "joinCommunity" })
   @UseAuth()
   @Post(":id/join")
@@ -121,7 +125,7 @@ export class CommunitiesController {
     await this.communitiesService.join(reqUser, id);
   }
 
-  @ApiResponse({ status: 204, description: "No content" })
+  @ApiNoContentResponse({ description: "No content" })
   @ApiOperation({ summary: "Leave a community", operationId: "leaveCommunity" })
   @UseAuth()
   @Post(":id/leave")

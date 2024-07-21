@@ -24,7 +24,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const responseBody: ErrorResponse = {
         statusCode: exception.getStatus(),
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(),
         path: httpAdapter.getRequestUrl(ctx.getRequest()) as unknown as string,
         message: exception.message,
       };
