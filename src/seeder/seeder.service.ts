@@ -156,7 +156,9 @@ export class SeederService {
             user.communities.some(community => community.posts.length > 0)
         )
       );
-      const community = faker.helpers.arrayElement(user.communities);
+      const community = faker.helpers.arrayElement(
+        user.communities.filter(community => community.posts.length > 0)
+      );
       const post = faker.helpers.arrayElement(community.posts);
       const vote = this.genVote({ user, post });
 
