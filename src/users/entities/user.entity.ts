@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Exclude, Expose } from "class-transformer";
 import { Community } from "src/communities/entities/community.entity";
 import { Post } from "src/posts/entities/post.entity";
@@ -41,6 +41,15 @@ export class User {
   @ApiProperty()
   @Column()
   name!: string;
+
+  @Expose()
+  @ApiPropertyOptional({
+    format: "url",
+  })
+  @Column({
+    nullable: true,
+  })
+  photoUrl?: string;
 
   @OneToMany(() => Community, community => community.owner)
   ownedCommunities!: Community[];

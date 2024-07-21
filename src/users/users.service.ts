@@ -51,6 +51,7 @@ export class UsersService {
       newUser.firebaseUid = createUserDto.firebaseUid;
       newUser.email = createUserDto.email;
       newUser.name = createUserDto.name;
+      newUser.photoUrl = createUserDto.photoUrl ?? undefined;
 
       return await this.userRepository.save(newUser);
     }
@@ -77,6 +78,7 @@ export class UsersService {
 
     foundUser.email = updateUserDto.email ?? foundUser.email;
     foundUser.name = updateUserDto.name ?? foundUser.name;
+    foundUser.photoUrl = updateUserDto.photoUrl ?? foundUser.photoUrl;
 
     return await this.userRepository.save(foundUser);
   }

@@ -30,6 +30,7 @@ export class SeederService {
     user.firebaseUid = faker.string.uuid();
     user.name = `${firstName} ${lastName}`;
     user.email = email;
+    user.photoUrl = faker.helpers.maybe(() => faker.image.avatar());
     user.communities = [];
     user.posts = [];
     user.votes = [];

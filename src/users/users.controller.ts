@@ -46,6 +46,7 @@ export class UsersController {
       firebaseUid: reqIdToken.uid,
       email: email,
       name: createUserRequest.name,
+      photoUrl: createUserRequest.photoUrl ?? null,
     };
 
     return await this.usersService.create(createUserDto);
