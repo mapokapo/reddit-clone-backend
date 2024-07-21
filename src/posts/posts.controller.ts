@@ -162,6 +162,7 @@ export class PostsController {
   @ApiResponse({
     status: 200,
     description: "OK",
+    type: PostEntity,
   })
   @ApiOperation({
     summary: "Get a personalized feed of posts for the current user",
