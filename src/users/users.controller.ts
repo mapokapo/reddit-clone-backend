@@ -1,6 +1,18 @@
-import { Body, Controller, Post, UnauthorizedException } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { UsersService } from "./users.service";
-import { ApiCreatedResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import { CreateUserRequest } from "./transport/create-user.request";
 import { CreateUserDto } from "./dtos/create-user.dto";
 import { DecodedIdToken } from "firebase-admin/auth";
@@ -13,7 +25,7 @@ import { User } from "./entities/user.entity";
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiCreatedResponse({ description: "User created", type: User })
+  @ApiCreatedResponse({ description: "Created", type: User })
   @ApiOperation({
     summary: "Create a new user using a Firebase ID token",
     operationId: "createUser",
@@ -37,5 +49,17 @@ export class UsersController {
     };
 
     return await this.usersService.create(createUserDto);
+  }
+
+  @ApiOkResponse({ description: "OK", type: User })
+  @ApiNoContentResponse({ description: "No content" })
+  @ApiOperation({
+    summary: "Get the current user",
+    operationId: "getMe",
+  })
+  @UseAuth("no-profile")
+  @Get("me")
+  async getMe(@ReqIdToken() reqIdToken: DecodedIdToken): Promise<User | null> {
+    return await this.usersService.findOneByFirebaseUid(reqIdToken.uid);
   }
 }

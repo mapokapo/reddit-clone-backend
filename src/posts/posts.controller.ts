@@ -30,6 +30,21 @@ import { User } from "src/users/entities/user.entity";
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
+  @ApiOkResponse({
+    description: "OK",
+    type: PostEntity,
+    isArray: true,
+  })
+  @ApiOperation({
+    summary: "Get a personalized feed of posts for the current user",
+    operationId: "getFeed",
+  })
+  @UseAuth()
+  @Get("feed")
+  async getFeed(@ReqUser() reqUser: User): Promise<PostEntity[]> {
+    return await this.postsService.getFeed(reqUser);
+  }
+
   @ApiCreatedResponse({ description: "Created", type: PostEntity })
   @ApiOperation({
     summary: "Create a new post in a community",
@@ -161,20 +176,5 @@ export class PostsController {
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
     await this.postsService.unvote(reqUser, communityId, id);
-  }
-
-  @ApiOkResponse({
-    description: "OK",
-    type: PostEntity,
-    isArray: true,
-  })
-  @ApiOperation({
-    summary: "Get a personalized feed of posts for the current user",
-    operationId: "getFeed",
-  })
-  @UseAuth()
-  @Get("feed")
-  async getFeed(@ReqUser() reqUser: User): Promise<PostEntity[]> {
-    return await this.postsService.getFeed(reqUser);
   }
 }
