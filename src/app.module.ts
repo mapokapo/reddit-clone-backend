@@ -11,6 +11,8 @@ import { PostsModule } from "./posts/posts.module";
 import { Post } from "./posts/entities/post.entity";
 import { Vote } from "./votes/vote.entity";
 import { FirebaseModule } from "./firebase/firebase.module";
+import { AppService } from "./app.service";
+import { SeederModule } from "./seeder/seeder.module";
 
 @Module({
   imports: [
@@ -18,6 +20,7 @@ import { FirebaseModule } from "./firebase/firebase.module";
     CommunitiesModule,
     FirebaseModule,
     PostsModule,
+    SeederModule,
     TypeOrmModule.forRoot({
       type: "sqlite",
       database: "./sqlite.db",
@@ -31,6 +34,7 @@ import { FirebaseModule } from "./firebase/firebase.module";
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
     },
+    AppService,
   ],
 })
 export class AppModule {}
