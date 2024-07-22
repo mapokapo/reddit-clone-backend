@@ -71,6 +71,22 @@ export class PostsController {
     isArray: true,
   })
   @ApiOperation({
+    summary: "Find all posts by a user in a community",
+    operationId: "findAllPostsByUser",
+  })
+  @Get("user/:userId")
+  async findAllByUser(
+    @Param("userId", ParseIntPipe) userId: number
+  ): Promise<PostEntity[]> {
+    return await this.postsService.findAllByUser(userId);
+  }
+
+  @ApiOkResponse({
+    description: "OK",
+    type: PostEntity,
+    isArray: true,
+  })
+  @ApiOperation({
     summary: "Find all posts in a community",
     operationId: "findAllPosts",
   })

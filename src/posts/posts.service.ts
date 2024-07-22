@@ -16,7 +16,9 @@ export class PostsService {
     @InjectRepository(Community)
     private readonly communityRepository: Repository<Community>,
     @InjectRepository(Vote)
-    private readonly votesRepository: Repository<Vote>
+    private readonly votesRepository: Repository<Vote>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
   ) {}
 
   async create(user: User, createPostDto: CreatePostDto): Promise<Post> {
@@ -54,6 +56,20 @@ export class PostsService {
 
     return await this.postsRepository.find({
       where: { community: community },
+    });
+  }
+
+  async findAllByUser(userId: number): Promise<Post[]> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (user === null) {
+      throw new NotFoundException("User not found");
+    }
+
+    return await this.postsRepository.find({
+      where: { author: user },
     });
   }
 

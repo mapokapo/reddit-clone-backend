@@ -8,12 +8,19 @@ import { User } from "./entities/user.entity";
 import { CreateUserDto } from "./dtos/create-user.dto";
 import { UpdateUserDto } from "./dtos/update-user.dto";
 import { Repository } from "typeorm";
+import { UserDataType } from "./dtos/user-data-type.dto";
+import { Post as PostEntity } from "src/posts/entities/post.entity";
+import { Vote } from "src/votes/vote.entity";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(PostEntity)
+    private readonly postRepository: Repository<PostEntity>,
+    @InjectRepository(Vote)
+    private readonly voteRepository: Repository<Vote>
   ) {}
 
   async findOneByEmail(email: string): Promise<User | null> {
@@ -99,5 +106,34 @@ export class UsersService {
     }
 
     await this.userRepository.delete(foundUser.id);
+  }
+
+  async getUserData(
+    user: User,
+    include: UserDataType[]
+  ): Promise<(PostEntity | Vote)[] | null> {
+    let data: (PostEntity | Vote)[] = [];
+
+    if (include.includes(UserDataType.POSTS)) {
+      const posts = await this.postRepository.find({
+        where: {
+          author: user,
+        },
+      });
+
+      data = data.concat(posts);
+    }
+
+    if (include.includes(UserDataType.VOTES)) {
+      const votes = await this.voteRepository.find({
+        where: {
+          voter: user,
+        },
+      });
+
+      data = data.concat(votes);
+    }
+
+    return data;
   }
 }
