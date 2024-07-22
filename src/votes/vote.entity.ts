@@ -1,5 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Exclude, Expose, Transform } from "class-transformer";
+import { Comment } from "src/comments/entities/comment.entity";
 import { Post } from "src/posts/entities/post.entity";
 import { User } from "src/users/entities/user.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
@@ -29,14 +30,29 @@ export class Vote {
     name: "postId",
   })
   @Transform(({ value }: { value: Post }) => value.id)
-  @ApiProperty({
+  @ApiPropertyOptional({
     name: "postId",
     type: "number",
   })
   @ManyToOne(() => Post, post => post.votes, {
     onDelete: "CASCADE",
+    nullable: true,
   })
-  post!: Post;
+  post?: Post;
+
+  @Expose({
+    name: "commentId",
+  })
+  @Transform(({ value }: { value: Comment }) => value.id)
+  @ApiPropertyOptional({
+    name: "commentId",
+    type: "number",
+  })
+  @ManyToOne(() => Comment, comment => comment.votes, {
+    onDelete: "CASCADE",
+    nullable: true,
+  })
+  comment?: Comment;
 
   @Expose()
   @ApiProperty()

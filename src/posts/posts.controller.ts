@@ -12,6 +12,7 @@ import {
 import {
   ApiCreatedResponse,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -46,6 +47,7 @@ export class PostsController {
   }
 
   @ApiCreatedResponse({ description: "Created", type: PostEntity })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Create a new post in a community",
     operationId: "createPost",
@@ -71,7 +73,7 @@ export class PostsController {
     isArray: true,
   })
   @ApiOperation({
-    summary: "Find all posts by a user in a community",
+    summary: "Find all posts by a user",
     operationId: "findAllPostsByUser",
   })
   @Get("user/:userId")
@@ -86,11 +88,12 @@ export class PostsController {
     type: PostEntity,
     isArray: true,
   })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Find all posts in a community",
     operationId: "findAllPosts",
   })
-  @Get(":communityId")
+  @Get("community/:communityId")
   async findAll(
     @Param("communityId", ParseIntPipe) communityId: number
   ): Promise<PostEntity[]> {
@@ -101,16 +104,14 @@ export class PostsController {
     description: "OK",
     type: PostEntity,
   })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
-    summary: "Find a post by ID in a community",
+    summary: "Find a post by ID",
     operationId: "findOnePost",
   })
-  @Get(":communityId/:id")
-  async findOne(
-    @Param("communityId", ParseIntPipe) communityId: number,
-    @Param("id", ParseIntPipe) id: number
-  ): Promise<PostEntity> {
-    const post = await this.postsService.findOne(communityId, id);
+  @Get(":id")
+  async findOne(@Param("id", ParseIntPipe) id: number): Promise<PostEntity> {
+    const post = await this.postsService.findOne(id);
 
     if (post === null) {
       throw new NotFoundException("Post not found");
@@ -120,77 +121,72 @@ export class PostsController {
   }
 
   @ApiOkResponse({ description: "OK", type: PostEntity })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
-    summary: "Update a post in a community",
+    summary: "Update a post",
     operationId: "updatePost",
   })
   @UseAuth()
-  @Patch(":communityId/:id")
+  @Patch(":id")
   async update(
     @ReqUser() reqUser: User,
-    @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number,
     @Body() updatePostRequest: UpdatePostRequest
   ): Promise<PostEntity> {
-    return await this.postsService.update(
-      reqUser,
-      communityId,
-      id,
-      updatePostRequest
-    );
+    return await this.postsService.update(reqUser, id, updatePostRequest);
   }
 
   @ApiNoContentResponse({ description: "No content" })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
-    summary: "Delete a post in a community",
+    summary: "Delete a post",
     operationId: "removePost",
   })
   @UseAuth()
-  @Delete(":communityId/:id")
+  @Delete(":id")
   async remove(
     @ReqUser() reqUser: User,
-    @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.postsService.remove(reqUser, communityId, id);
+    await this.postsService.remove(reqUser, id);
   }
 
   @ApiNoContentResponse({ description: "No content" })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({ summary: "Upvote a post", operationId: "upvotePost" })
   @UseAuth()
-  @Post(":communityId/:id/upvote")
+  @Post(":id/upvote")
   async upvote(
     @ReqUser() reqUser: User,
-    @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.postsService.vote(reqUser, communityId, id, true);
+    await this.postsService.vote(reqUser, id, true);
   }
 
   @ApiNoContentResponse({ description: "No content" })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({ summary: "Downvote a post", operationId: "downvotePost" })
   @UseAuth()
-  @Post(":communityId/:id/downvote")
+  @Post(":id/downvote")
   async downvote(
     @ReqUser() reqUser: User,
-    @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.postsService.vote(reqUser, communityId, id, false);
+    await this.postsService.vote(reqUser, id, false);
   }
 
   @ApiNoContentResponse({ description: "No content" })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Remove a vote from a post",
     operationId: "unvotePost",
   })
   @UseAuth()
-  @Delete(":communityId/:id/unvote")
+  @Delete(":id/unvote")
   async unvote(
     @ReqUser() reqUser: User,
-    @Param("communityId", ParseIntPipe) communityId: number,
     @Param("id", ParseIntPipe) id: number
   ): Promise<void> {
-    await this.postsService.unvote(reqUser, communityId, id);
+    await this.postsService.unvote(reqUser, id);
   }
 }

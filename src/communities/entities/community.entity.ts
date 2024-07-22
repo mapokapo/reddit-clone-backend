@@ -45,7 +45,9 @@ export class Community {
   })
   owner!: User;
 
-  @OneToMany(() => Post, post => post.community)
+  @OneToMany(() => Post, post => post.community, {
+    cascade: true,
+  })
   posts!: Post[];
 
   @ManyToMany(() => User, user => user.communities)

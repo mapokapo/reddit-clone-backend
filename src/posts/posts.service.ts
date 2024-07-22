@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { CreatePostDto } from "./dtos/create-post.dto";
 import { UpdatePostDto } from "./dtos/update-post.dto";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -31,8 +36,8 @@ export class PostsService {
       throw new NotFoundException("Community not found");
     }
 
-    if (!community.members.some(member => member.id === user.id)) {
-      throw new NotFoundException("You are not a member of this community");
+    if (!user.communities.includes(community)) {
+      throw new UnauthorizedException("You are not a member of this community");
     }
 
     const post = new Post();
@@ -40,7 +45,6 @@ export class PostsService {
     post.content = createPostDto.content;
     post.community = community;
     post.author = user;
-    post.votes = [];
 
     return await this.postsRepository.save(post);
   }
@@ -55,7 +59,11 @@ export class PostsService {
     }
 
     return await this.postsRepository.find({
-      where: { community: community },
+      where: {
+        community: {
+          id: communityId,
+        },
+      },
     });
   }
 
@@ -69,21 +77,17 @@ export class PostsService {
     }
 
     return await this.postsRepository.find({
-      where: { author: user },
+      where: {
+        author: {
+          id: userId,
+        },
+      },
     });
   }
 
-  async findOne(communityId: number, id: number): Promise<Post | null> {
-    const community = await this.communityRepository.findOne({
-      where: { id: communityId },
-    });
-
-    if (community === null) {
-      throw new NotFoundException("Community not found");
-    }
-
+  async findOne(id: number): Promise<Post | null> {
     const post = await this.postsRepository.findOne({
-      where: { community: community, id: id },
+      where: { id: id },
     });
 
     return post;
@@ -91,33 +95,23 @@ export class PostsService {
 
   async update(
     user: User,
-    communityId: number,
     id: number,
     updatePostDto: UpdatePostDto
   ): Promise<Post> {
-    const community = await this.communityRepository.findOne({
-      where: { id: communityId },
-      relations: ["members"],
-    });
-
-    if (community === null) {
-      throw new NotFoundException("Community not found");
-    }
-
-    if (!community.members.some(member => member.id === user.id)) {
-      throw new NotFoundException("You are not a member of this community");
-    }
-
     const post = await this.postsRepository.findOne({
-      where: { community: community, id: id },
+      where: { id: id },
     });
 
     if (post === null) {
       throw new NotFoundException("Post not found");
     }
 
+    if (!user.communities.includes(post.community)) {
+      throw new UnauthorizedException("You are not a member of this community");
+    }
+
     if (post.author.id !== user.id) {
-      throw new NotFoundException("You are not the author of this post");
+      throw new UnauthorizedException("You are not the author of this post");
     }
 
     post.title = updatePostDto.title ?? post.title;
@@ -126,56 +120,29 @@ export class PostsService {
     return await this.postsRepository.save(post);
   }
 
-  async remove(user: User, communityId: number, id: number): Promise<void> {
-    const community = await this.communityRepository.findOne({
-      where: { id: communityId },
-      relations: ["members"],
-    });
-
-    if (community === null) {
-      throw new NotFoundException("Community not found");
-    }
-
-    if (!community.members.some(member => member.id === user.id)) {
-      throw new NotFoundException("You are not a member of this community");
-    }
-
+  async remove(user: User, id: number): Promise<void> {
     const post = await this.postsRepository.findOne({
-      where: { community: community, id: id },
+      where: { id: id },
     });
 
     if (post === null) {
       throw new NotFoundException("Post not found");
     }
 
+    if (!user.communities.includes(post.community)) {
+      throw new UnauthorizedException("You are not a member of this community");
+    }
+
     if (post.author.id !== user.id) {
-      throw new NotFoundException("You are not the author of this post");
+      throw new UnauthorizedException("You are not the author of this post");
     }
 
     await this.postsRepository.remove(post);
   }
 
-  async vote(
-    user: User,
-    communityId: number,
-    id: number,
-    isUpvote: boolean
-  ): Promise<void> {
-    const community = await this.communityRepository.findOne({
-      where: { id: communityId },
-      relations: ["members"],
-    });
-
-    if (community === null) {
-      throw new NotFoundException("Community not found");
-    }
-
-    if (!community.members.some(member => member.id === user.id)) {
-      throw new NotFoundException("You are not a member of this community");
-    }
-
+  async vote(user: User, id: number, isUpvote: boolean): Promise<void> {
     const post = await this.postsRepository.findOne({
-      where: { community: community, id: id },
+      where: { id: id },
       relations: {
         author: true,
         votes: {
@@ -188,8 +155,12 @@ export class PostsService {
       throw new NotFoundException("Post not found");
     }
 
+    if (!user.communities.includes(post.community)) {
+      throw new UnauthorizedException("You are not a member of this community");
+    }
+
     if (post.author.id === user.id) {
-      throw new NotFoundException("You cannot vote on your own post");
+      throw new UnauthorizedException("You cannot vote on your own post");
     }
 
     const userAlreadyVoted = post.votes.some(vote => vote.voter.id === user.id);
@@ -224,22 +195,9 @@ export class PostsService {
     await this.postsRepository.save(post);
   }
 
-  async unvote(user: User, communityId: number, id: number): Promise<void> {
-    const community = await this.communityRepository.findOne({
-      where: { id: communityId },
-      relations: ["members"],
-    });
-
-    if (community === null) {
-      throw new NotFoundException("Community not found");
-    }
-
-    if (!community.members.some(member => member.id === user.id)) {
-      throw new NotFoundException("You are not a member of this community");
-    }
-
+  async unvote(user: User, id: number): Promise<void> {
     const post = await this.postsRepository.findOne({
-      where: { community: community, id: id },
+      where: { id: id },
       relations: {
         votes: {
           voter: true,
@@ -251,19 +209,17 @@ export class PostsService {
       throw new NotFoundException("Post not found");
     }
 
+    if (!user.communities.includes(post.community)) {
+      throw new UnauthorizedException("You are not a member of this community");
+    }
+
     const vote = post.votes.find(vote => vote.voter.id === user.id);
 
     if (vote === undefined) {
-      throw new NotFoundException("You have not voted on this post");
+      throw new BadRequestException("You have not voted on this post");
     }
 
-    const voteToRemove = post.votes.find(vote => vote.voter.id === user.id);
-
-    if (voteToRemove === undefined) {
-      throw new NotFoundException("Vote not found");
-    }
-
-    await this.votesRepository.remove(voteToRemove);
+    await this.votesRepository.remove(vote);
 
     post.votes = post.votes.filter(vote => vote.voter.id !== user.id);
 
@@ -274,7 +230,11 @@ export class PostsService {
     const posts = await Promise.all(
       user.communities.map(community =>
         this.postsRepository.find({
-          where: { community: community },
+          where: {
+            community: {
+              id: community.id,
+            },
+          },
           take: 10,
         })
       )

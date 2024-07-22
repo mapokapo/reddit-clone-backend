@@ -117,7 +117,9 @@ export class UsersService {
     if (include.includes(UserDataType.POSTS)) {
       const posts = await this.postRepository.find({
         where: {
-          author: user,
+          author: {
+            id: user.id,
+          },
         },
       });
 
@@ -127,7 +129,9 @@ export class UsersService {
     if (include.includes(UserDataType.VOTES)) {
       const votes = await this.voteRepository.find({
         where: {
-          voter: user,
+          voter: {
+            id: user.id,
+          },
         },
       });
 

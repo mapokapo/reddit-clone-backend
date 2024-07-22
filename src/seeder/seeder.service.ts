@@ -6,6 +6,7 @@ import { User } from "src/users/entities/user.entity";
 import { Vote } from "src/votes/vote.entity";
 import { Repository } from "typeorm";
 import { faker } from "@faker-js/faker";
+import { Comment } from "src/comments/entities/comment.entity";
 
 @Injectable()
 export class SeederService {
@@ -17,7 +18,9 @@ export class SeederService {
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
     @InjectRepository(Vote)
-    private readonly voteRepository: Repository<Vote>
+    private readonly voteRepository: Repository<Vote>,
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>
   ) {}
 
   private genUser() {
@@ -35,6 +38,7 @@ export class SeederService {
     user.posts = [];
     user.votes = [];
     user.ownedCommunities = [];
+    user.comments = [];
 
     return user;
   }
@@ -69,11 +73,6 @@ export class SeederService {
     return community;
   }
 
-  /**
-   * generate some communities for these users:
-- each community is owned by exactly one owner
-- each community can have 1 or more members, if there is only one member then it must be the owner
-   */
   private async genCommunities(count: number, users: User[]) {
     const communities = Array.from({ length: count }, () => {
       const owner = faker.helpers.arrayElement(users);
@@ -108,6 +107,7 @@ export class SeederService {
     post.author = author;
     post.community = community;
     post.votes = [];
+    post.comments = [];
 
     author.posts.push(post);
     community.posts.push(post);
@@ -136,14 +136,83 @@ export class SeederService {
     return posts;
   }
 
-  private genVote({ user, post }: { user: User; post: Post }) {
+  private genComment({
+    author,
+    post,
+    parent,
+  }: {
+    author: User;
+    post: Post;
+    parent: Comment | null;
+  }) {
+    const comment = new Comment();
+    comment.content = faker.lorem.sentence();
+    comment.author = author;
+    comment.children = [];
+    comment.votes = [];
+    comment.post = post;
+    comment.parent = parent ?? undefined;
+
+    author.comments.push(comment);
+    post.comments.push(comment);
+
+    return comment;
+  }
+
+  private async genRootComments(count: number, users: User[], posts: Post[]) {
+    const comments = Array.from({ length: count }, () => {
+      const author = faker.helpers.arrayElement(
+        users.filter(user => user.communities.length > 0)
+      );
+      const post = faker.helpers.arrayElement(posts);
+      const comment = this.genComment({ author, post, parent: null });
+
+      return comment;
+    });
+
+    for (const comment of comments) {
+      await this.commentRepository.save(comment);
+    }
+
+    return comments;
+  }
+
+  private async genChildComments(
+    count: number,
+    users: User[],
+    rootComments: Comment[]
+  ) {
+    const comments = Array.from({ length: count }, () => {
+      const author = faker.helpers.arrayElement(
+        users.filter(user => user.communities.length > 0)
+      );
+      const parent = faker.helpers.arrayElement(rootComments);
+      const post = parent.post;
+      const comment = this.genComment({ author, post, parent });
+
+      return comment;
+    });
+
+    for (const comment of comments) {
+      await this.commentRepository.save(comment);
+    }
+
+    return comments;
+  }
+
+  private genVote({ user, item }: { user: User; item: Post | Comment }) {
     const vote = new Vote();
     vote.voter = user;
-    vote.post = post;
+    if (item instanceof Post) {
+      vote.post = item;
+      item.votes.push(vote);
+    } else {
+      vote.comment = item;
+      item.votes.push(vote);
+    }
     vote.isUpvote = faker.datatype.boolean();
 
     user.votes.push(vote);
-    post.votes.push(vote);
 
     return vote;
   }
@@ -160,8 +229,18 @@ export class SeederService {
       const community = faker.helpers.arrayElement(
         user.communities.filter(community => community.posts.length > 0)
       );
-      const post = faker.helpers.arrayElement(community.posts);
-      const vote = this.genVote({ user, post });
+      let item: Post | Comment;
+      if (
+        faker.datatype.boolean() &&
+        community.posts.some(post => post.comments.length > 0)
+      ) {
+        item = faker.helpers.arrayElement(
+          community.posts.flatMap(post => post.comments)
+        );
+      } else {
+        item = faker.helpers.arrayElement(community.posts);
+      }
+      const vote = this.genVote({ user, item });
 
       return vote;
     });
@@ -195,8 +274,16 @@ export class SeederService {
   async seed() {
     const users = await this.genUsers(50);
     await this.genCommunities(10, users);
-    await this.genPosts(30, users);
-    await this.genVotes(40, users);
+    const posts = await this.genPosts(30, users);
+    const rootComments = await this.genRootComments(30, users, posts);
+    const commentsLayer1 = await this.genChildComments(15, users, rootComments);
+    const commentsLayer2 = await this.genChildComments(
+      10,
+      users,
+      commentsLayer1
+    );
+    await this.genChildComments(5, users, commentsLayer2);
+    await this.genVotes(100, users);
 
     await this.genSeedMarkerUser();
   }

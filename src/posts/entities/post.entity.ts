@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose, Transform } from "class-transformer";
+import { Comment } from "src/comments/entities/comment.entity";
 import { Community } from "src/communities/entities/community.entity";
 import { User } from "src/users/entities/user.entity";
 import { Vote } from "src/votes/vote.entity";
@@ -74,6 +75,11 @@ export class Post {
     cascade: true,
   })
   votes!: Vote[];
+
+  @OneToMany(() => Comment, comment => comment.post, {
+    cascade: true,
+  })
+  comments!: Comment[];
 
   @Expose()
   @ApiProperty()

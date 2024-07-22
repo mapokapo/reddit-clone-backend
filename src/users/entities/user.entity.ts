@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Exclude, Expose } from "class-transformer";
+import { Comment } from "src/comments/entities/comment.entity";
 import { Community } from "src/communities/entities/community.entity";
 import { Post } from "src/posts/entities/post.entity";
 import { Vote } from "src/votes/vote.entity";
@@ -51,7 +52,9 @@ export class User {
   })
   photoUrl?: string;
 
-  @OneToMany(() => Community, community => community.owner)
+  @OneToMany(() => Community, community => community.owner, {
+    cascade: true,
+  })
   ownedCommunities!: Community[];
 
   @OneToMany(() => Post, post => post.author)
@@ -59,6 +62,9 @@ export class User {
 
   @OneToMany(() => Vote, vote => vote.voter)
   votes!: Vote[];
+
+  @OneToMany(() => Comment, comment => comment.author)
+  comments!: Comment[];
 
   @ManyToMany(() => Community, community => community.members)
   communities!: Community[];

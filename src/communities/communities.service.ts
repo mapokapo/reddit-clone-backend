@@ -102,7 +102,7 @@ export class CommunitiesService {
       throw new NotFoundException("Community not found");
     }
 
-    if (community.members.some(member => member.id === user.id)) {
+    if (user.communities.includes(community)) {
       throw new UnauthorizedException(
         "You are already a member of this community"
       );
@@ -125,7 +125,7 @@ export class CommunitiesService {
       throw new NotFoundException("Community not found");
     }
 
-    if (!community.members.some(member => member.id === user.id)) {
+    if (!user.communities.includes(community)) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 

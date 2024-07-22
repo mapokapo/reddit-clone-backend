@@ -15,6 +15,7 @@ import { UpdateCommunityRequest } from "./transport/update-community.request";
 import {
   ApiCreatedResponse,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -66,6 +67,7 @@ export class CommunitiesController {
     description: "OK",
     type: Community,
   })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Find a community by ID",
     operationId: "findOneCommunity",
@@ -75,13 +77,14 @@ export class CommunitiesController {
     const community = await this.communitiesService.findOne(id);
 
     if (community === null) {
-      throw new NotFoundException("Community not found");
+      throw new NotFoundException("Not found");
     }
 
     return community;
   }
 
   @ApiOkResponse({ description: "OK", type: Community })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Update a community",
     operationId: "updateCommunity",
@@ -101,6 +104,7 @@ export class CommunitiesController {
   }
 
   @ApiNoContentResponse({ description: "No content" })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Delete a community",
     operationId: "removeCommunity",
@@ -115,6 +119,7 @@ export class CommunitiesController {
   }
 
   @ApiNoContentResponse({ description: "No content" })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({ summary: "Join a community", operationId: "joinCommunity" })
   @UseAuth()
   @Post(":id/join")
@@ -126,6 +131,7 @@ export class CommunitiesController {
   }
 
   @ApiNoContentResponse({ description: "No content" })
+  @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({ summary: "Leave a community", operationId: "leaveCommunity" })
   @UseAuth()
   @Post(":id/leave")
