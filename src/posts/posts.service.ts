@@ -239,19 +239,46 @@ export class PostsService {
   }
 
   async getFeed(user: User): Promise<Post[]> {
-    const posts = await Promise.all(
-      user.communities.map(community =>
-        this.postsRepository.find({
-          where: {
-            community: {
-              id: community.id,
+    const posts = (
+      await Promise.all(
+        user.communities.map(community =>
+          this.postsRepository.find({
+            where: {
+              community: {
+                id: community.id,
+              },
             },
-          },
-          take: 10,
-        })
+            take: 10,
+          })
+        )
       )
-    );
+    ).flat();
 
-    return posts.flat();
+    if (posts.length < 10) {
+      const newestCommunities = await this.communityRepository.find({
+        order: {
+          createdAt: "DESC",
+        },
+        take: 10 - posts.length,
+      });
+
+      const newestPosts = (
+        await Promise.all(
+          newestCommunities.map(community =>
+            this.postsRepository.find({
+              where: {
+                community: {
+                  id: community.id,
+                },
+              },
+              take: 1,
+            })
+          )
+        )
+      ).flat();
+
+      posts.push(...newestPosts);
+    }
+    return posts;
   }
 }

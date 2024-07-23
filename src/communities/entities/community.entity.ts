@@ -11,6 +11,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
 
 @Exclude()
@@ -65,4 +66,13 @@ export class Community {
     default: () => "CURRENT_TIMESTAMP",
   })
   createdAt!: Date;
+
+  @Expose()
+  @ApiProperty()
+  @UpdateDateColumn({
+    type: "datetime",
+    default: () => "CURRENT_TIMESTAMP",
+    onUpdate: "CURRENT_TIMESTAMP",
+  })
+  updatedAt!: Date;
 }

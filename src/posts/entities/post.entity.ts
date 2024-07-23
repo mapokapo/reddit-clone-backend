@@ -46,6 +46,12 @@ export class Post {
   })
   community!: Community;
 
+  @Expose()
+  @ApiProperty()
+  get communityName(): string {
+    return this.community.name;
+  }
+
   @Expose({
     name: "authorId",
   })

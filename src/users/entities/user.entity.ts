@@ -6,10 +6,12 @@ import { Post } from "src/posts/entities/post.entity";
 import { Vote } from "src/votes/vote.entity";
 import {
   Column,
+  CreateDateColumn,
   Entity,
   ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
 
 @Exclude()
@@ -68,4 +70,21 @@ export class User {
 
   @ManyToMany(() => Community, community => community.members)
   communities!: Community[];
+
+  @Expose()
+  @ApiProperty()
+  @CreateDateColumn({
+    type: "datetime",
+    default: () => "CURRENT_TIMESTAMP",
+  })
+  createdAt!: Date;
+
+  @Expose()
+  @ApiProperty()
+  @UpdateDateColumn({
+    type: "datetime",
+    default: () => "CURRENT_TIMESTAMP",
+    onUpdate: "CURRENT_TIMESTAMP",
+  })
+  updatedAt!: Date;
 }

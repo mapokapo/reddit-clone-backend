@@ -5,6 +5,7 @@ import { User } from "src/users/entities/user.entity";
 import { Vote } from "src/votes/vote.entity";
 import {
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   OneToMany,
@@ -12,6 +13,7 @@ import {
   Tree,
   TreeChildren,
   TreeParent,
+  UpdateDateColumn,
 } from "typeorm";
 
 @Exclude()
@@ -91,4 +93,21 @@ export class Comment {
     cascade: true,
   })
   votes!: Vote[];
+
+  @Expose()
+  @ApiProperty()
+  @CreateDateColumn({
+    type: "datetime",
+    default: () => "CURRENT_TIMESTAMP",
+  })
+  createdAt!: Date;
+
+  @Expose()
+  @ApiProperty()
+  @UpdateDateColumn({
+    type: "datetime",
+    default: () => "CURRENT_TIMESTAMP",
+    onUpdate: "CURRENT_TIMESTAMP",
+  })
+  updatedAt!: Date;
 }
