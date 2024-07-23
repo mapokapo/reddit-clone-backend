@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  DefaultValuePipe,
 } from "@nestjs/common";
 import { CommentsService } from "./comments.service";
 import { CreateCommentDto } from "./dto/create-comment.dto";
@@ -27,7 +28,6 @@ import { ReqUser } from "src/auth/req-user.decorator";
 import { User } from "src/users/entities/user.entity";
 import { CreateCommentRequest } from "./transport/create-comment.request";
 import { UpdateCommentRequest } from "./transport/update-comment.request";
-import { DepthQuery } from "./transport/depth.query";
 
 @ApiTags("comments")
 @Controller("comments")
@@ -57,36 +57,40 @@ export class CommentsController {
 
   @ApiOkResponse({ description: "OK", type: Comment, isArray: true })
   @ApiNotFoundResponse({ description: "Not found" })
-  @ApiQuery({
-    name: "depth",
-    type: DepthQuery,
-  })
   @ApiOperation({
     summary: "Get all comments for a post",
     operationId: "findAllComments",
   })
+  @ApiQuery({
+    name: "depth",
+    type: Number,
+    required: false,
+    description: "The depth of the comment tree to return",
+  })
   @Get("posts/:postId")
   async findAll(
     @Param("postId", ParseIntPipe) postId: number,
-    @Query("depth") depth = 5
+    @Query("depth", new DefaultValuePipe(5)) depth = 5
   ): Promise<Comment[]> {
     return await this.commentsService.findAll(postId, depth);
   }
 
   @ApiOkResponse({ description: "OK", type: Comment })
   @ApiNotFoundResponse({ description: "Not found" })
-  @ApiQuery({
-    name: "depth",
-    type: DepthQuery,
-  })
   @ApiOperation({
     summary: "Get a comment by ID",
     operationId: "findCommentById",
   })
+  @ApiQuery({
+    name: "depth",
+    type: Number,
+    required: false,
+    description: "The depth of the comment tree to return",
+  })
   @Get(":commentId")
   async findOne(
     @Param("commentId", ParseIntPipe) commentId: number,
-    @Query("depth") depth = 5
+    @Query("depth", new DefaultValuePipe(5)) depth = 5
   ): Promise<Comment> {
     return await this.commentsService.findOne(commentId, depth);
   }

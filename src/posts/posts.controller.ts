@@ -8,6 +8,8 @@ import {
   Delete,
   ParseIntPipe,
   NotFoundException,
+  Query,
+  ParseBoolPipe,
 } from "@nestjs/common";
 import {
   ApiCreatedResponse,
@@ -153,26 +155,15 @@ export class PostsController {
 
   @ApiNoContentResponse({ description: "No content" })
   @ApiNotFoundResponse({ description: "Not found" })
-  @ApiOperation({ summary: "Upvote a post", operationId: "upvotePost" })
+  @ApiOperation({ summary: "Vote a post up or down", operationId: "votePost" })
   @UseAuth()
-  @Post(":id/upvote")
+  @Post(":id/vote")
   async upvote(
     @ReqUser() reqUser: User,
-    @Param("id", ParseIntPipe) id: number
+    @Param("id", ParseIntPipe) id: number,
+    @Query("isUpvote", ParseBoolPipe) isUpvote: boolean
   ): Promise<void> {
-    await this.postsService.vote(reqUser, id, true);
-  }
-
-  @ApiNoContentResponse({ description: "No content" })
-  @ApiNotFoundResponse({ description: "Not found" })
-  @ApiOperation({ summary: "Downvote a post", operationId: "downvotePost" })
-  @UseAuth()
-  @Post(":id/downvote")
-  async downvote(
-    @ReqUser() reqUser: User,
-    @Param("id", ParseIntPipe) id: number
-  ): Promise<void> {
-    await this.postsService.vote(reqUser, id, false);
+    await this.postsService.vote(reqUser, id, isUpvote);
   }
 
   @ApiNoContentResponse({ description: "No content" })
