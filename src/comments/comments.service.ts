@@ -38,7 +38,9 @@ export class CommentsService {
       throw new NotFoundException("Post not found");
     }
 
-    if (!user.communities.includes(post.community)) {
+    if (
+      !user.communities.find(community => community.id === post.community.id)
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 
@@ -66,6 +68,8 @@ export class CommentsService {
     comment.author = user;
     comment.post = post;
     comment.parent = parent ?? undefined;
+    comment.children = [];
+    comment.votes = [];
 
     return await this.commentRepository.save(comment);
   }
@@ -147,7 +151,11 @@ export class CommentsService {
       throw new UnauthorizedException("You are not the author of this comment");
     }
 
-    if (!user.communities.includes(comment.post.community)) {
+    if (
+      !user.communities.find(
+        community => community.id === comment.post.community.id
+      )
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 
@@ -171,7 +179,11 @@ export class CommentsService {
       throw new UnauthorizedException("You are not the author of this comment");
     }
 
-    if (!user.communities.includes(comment.post.community)) {
+    if (
+      !user.communities.find(
+        community => community.id === comment.post.community.id
+      )
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 
@@ -193,7 +205,11 @@ export class CommentsService {
       throw new NotFoundException("Comment not found");
     }
 
-    if (!user.communities.includes(comment.post.community)) {
+    if (
+      !user.communities.find(
+        community => community.id === comment.post.community.id
+      )
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 
@@ -249,7 +265,11 @@ export class CommentsService {
       throw new NotFoundException("Comment not found");
     }
 
-    if (!user.communities.includes(comment.post.community)) {
+    if (
+      !user.communities.find(
+        community => community.id === comment.post.community.id
+      )
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 

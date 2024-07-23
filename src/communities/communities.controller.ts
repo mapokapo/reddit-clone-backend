@@ -66,6 +66,21 @@ export class CommunitiesController {
   @ApiOkResponse({
     description: "OK",
     type: Community,
+    isArray: true,
+  })
+  @ApiOperation({
+    summary: "Find all communities that the current user is a member of",
+    operationId: "findUserCommunities",
+  })
+  @UseAuth()
+  @Get("me")
+  async findUserCommunities(@ReqUser() reqUser: User): Promise<Community[]> {
+    return await this.communitiesService.findUserCommunities(reqUser);
+  }
+
+  @ApiOkResponse({
+    description: "OK",
+    type: Community,
   })
   @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({

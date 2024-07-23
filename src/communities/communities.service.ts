@@ -26,12 +26,23 @@ export class CommunitiesService {
     community.description = createCommunityDto.description;
     community.owner = user;
     community.members = [user];
+    community.posts = [];
 
     return await this.communityRepository.save(community);
   }
 
   async findAll(): Promise<Community[]> {
     return await this.communityRepository.find();
+  }
+
+  async findUserCommunities(user: User): Promise<Community[]> {
+    return await this.communityRepository.find({
+      where: {
+        members: {
+          id: user.id,
+        },
+      },
+    });
   }
 
   async findOne(id: number): Promise<Community | null> {
@@ -102,7 +113,7 @@ export class CommunitiesService {
       throw new NotFoundException("Community not found");
     }
 
-    if (user.communities.includes(community)) {
+    if (user.communities.find(userCommunity => userCommunity.id === id)) {
       throw new UnauthorizedException(
         "You are already a member of this community"
       );
@@ -125,7 +136,7 @@ export class CommunitiesService {
       throw new NotFoundException("Community not found");
     }
 
-    if (!user.communities.includes(community)) {
+    if (!user.communities.find(userCommunity => userCommunity.id === id)) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 

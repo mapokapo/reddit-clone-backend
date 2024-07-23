@@ -44,7 +44,13 @@ export class UsersService {
       where: {
         firebaseUid: uid,
       },
-      relations: ["communities", "ownedCommunities", "posts", "votes"],
+      relations: [
+        "communities",
+        "ownedCommunities",
+        "posts",
+        "votes",
+        "comments",
+      ],
     });
   }
 
@@ -59,6 +65,11 @@ export class UsersService {
       newUser.email = createUserDto.email;
       newUser.name = createUserDto.name;
       newUser.photoUrl = createUserDto.photoUrl ?? undefined;
+      newUser.communities = [];
+      newUser.ownedCommunities = [];
+      newUser.posts = [];
+      newUser.votes = [];
+      newUser.comments = [];
 
       return await this.userRepository.save(newUser);
     }

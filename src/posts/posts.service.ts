@@ -36,7 +36,9 @@ export class PostsService {
       throw new NotFoundException("Community not found");
     }
 
-    if (!user.communities.includes(community)) {
+    if (
+      !user.communities.find(userCommunity => userCommunity.id === community.id)
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 
@@ -45,6 +47,8 @@ export class PostsService {
     post.content = createPostDto.content;
     post.community = community;
     post.author = user;
+    post.comments = [];
+    post.votes = [];
 
     return await this.postsRepository.save(post);
   }
@@ -106,7 +110,9 @@ export class PostsService {
       throw new NotFoundException("Post not found");
     }
 
-    if (!user.communities.includes(post.community)) {
+    if (
+      !user.communities.find(community => community.id === post.community.id)
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 
@@ -129,7 +135,9 @@ export class PostsService {
       throw new NotFoundException("Post not found");
     }
 
-    if (!user.communities.includes(post.community)) {
+    if (
+      !user.communities.find(community => community.id === post.community.id)
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 
@@ -155,7 +163,9 @@ export class PostsService {
       throw new NotFoundException("Post not found");
     }
 
-    if (!user.communities.includes(post.community)) {
+    if (
+      !user.communities.find(community => community.id === post.community.id)
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 
@@ -209,7 +219,9 @@ export class PostsService {
       throw new NotFoundException("Post not found");
     }
 
-    if (!user.communities.includes(post.community)) {
+    if (
+      !user.communities.find(community => community.id === post.community.id)
+    ) {
       throw new UnauthorizedException("You are not a member of this community");
     }
 
