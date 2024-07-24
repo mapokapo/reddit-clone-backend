@@ -57,12 +57,17 @@ export class PostResponse {
     response.content = entity.content;
     response.communityId = entity.community.id;
     response.communityName = entity.community.name;
-    response.upvoted =
-      user === undefined
-        ? null
-        : entity.votes.some(vote => vote.voter.id === user.id);
+    // true if user voted and value is true, false if user voted and value is false, null if user has not voted or if user is not provided
+    if (user) {
+      const userVote = entity.votes.find(vote => vote.voter.id === user.id);
+      response.upvoted = userVote !== undefined ? userVote.isUpvote : null;
+    } else {
+      response.upvoted = null;
+    }
     response.authorId = entity.author.id;
-    response.votes = entity.votes.length;
+    response.votes =
+      entity.votes.filter(vote => vote.isUpvote).length -
+      entity.votes.filter(vote => !vote.isUpvote).length;
     response.createdAt = entity.createdAt;
     response.updatedAt = entity.updatedAt;
 

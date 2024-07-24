@@ -26,6 +26,7 @@ import { Post as PostEntity } from "src/posts/entities/post.entity";
 import { ReqUser } from "src/auth/req-user.decorator";
 import { GetUserDataQuery } from "./transport/get-user-data.query";
 import { Vote } from "src/votes/vote.entity";
+import { PostResponse } from "src/posts/transport/post.response";
 
 @ApiTags("users")
 @Controller("users")
@@ -80,7 +81,7 @@ export class UsersController {
       type: "array",
       items: {
         anyOf: [
-          { $ref: getSchemaPath(PostEntity) },
+          { $ref: getSchemaPath(PostResponse) },
           { $ref: getSchemaPath(Vote) },
         ],
       },
@@ -98,7 +99,22 @@ export class UsersController {
   async getUserData(
     @ReqUser() reqUser: User,
     @Query() query: GetUserDataQuery
-  ): Promise<(PostEntity | Vote)[] | null> {
-    return await this.usersService.getUserData(reqUser, query.include ?? []);
+  ): Promise<(PostResponse | Vote)[] | null> {
+    const data = await this.usersService.getUserData(
+      reqUser,
+      query.include ?? []
+    );
+
+    if (data === null) {
+      return null;
+    }
+
+    return data.map(item => {
+      if (item instanceof PostEntity) {
+        return PostResponse.entityToResponse(item, reqUser);
+      } else {
+        return item;
+      }
+    });
   }
 }

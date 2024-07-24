@@ -106,7 +106,6 @@ export class PostsService {
   ): Promise<Post> {
     const post = await this.postsRepository.findOne({
       where: { id: id },
-      relations: ["author", "community"],
     });
 
     if (post === null) {
@@ -135,7 +134,6 @@ export class PostsService {
   async remove(user: User, id: number): Promise<void> {
     const post = await this.postsRepository.findOne({
       where: { id: id },
-      relations: ["author", "community"],
     });
 
     if (post === null) {

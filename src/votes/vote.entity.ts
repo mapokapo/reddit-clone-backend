@@ -22,6 +22,7 @@ export class Vote {
     type: "number",
   })
   @ManyToOne(() => User, user => user.votes, {
+    eager: true,
     onDelete: "CASCADE",
   })
   voter!: User;

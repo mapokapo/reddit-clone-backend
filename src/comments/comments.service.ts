@@ -32,7 +32,6 @@ export class CommentsService {
       where: {
         id: createCommentDto.postId,
       },
-      relations: ["community"],
     });
 
     if (post === null) {

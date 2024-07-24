@@ -1,5 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Exclude, Expose, Transform } from "class-transformer";
+import { Exclude } from "class-transformer";
 import { Comment } from "src/comments/entities/comment.entity";
 import { Community } from "src/communities/entities/community.entity";
 import { User } from "src/users/entities/user.entity";
@@ -17,65 +16,27 @@ import {
 @Exclude()
 @Entity()
 export class Post {
-  @Expose()
-  @ApiProperty()
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Expose()
-  @ApiProperty()
   @Column()
   title!: string;
 
-  @Expose()
-  @ApiProperty()
   @Column()
   content!: string;
 
-  @Expose({
-    name: "communityId",
-  })
-  @Transform(({ value }: { value: Community }) => value.id)
-  @ApiProperty({
-    name: "communityId",
-    type: "number",
-  })
   @ManyToOne(() => Community, community => community.posts, {
     eager: true,
     onDelete: "CASCADE",
   })
   community!: Community;
 
-  @Expose()
-  @ApiProperty()
-  get communityName(): string {
-    return this.community.name;
-  }
-
-  @Expose({
-    name: "authorId",
-  })
-  @Transform(({ value }: { value: User }) => value.id)
-  @ApiProperty({
-    name: "authorId",
-    type: "number",
-  })
   @ManyToOne(() => User, user => user.posts, {
     eager: true,
     onDelete: "CASCADE",
   })
   author!: User;
 
-  // eslint-disable-next-line @darraghor/nestjs-typed/api-property-returning-array-should-set-array
-  @Expose()
-  @Transform(
-    ({ value }: { value: Vote[] }) =>
-      value.filter(v => v.isUpvote).length -
-      value.filter(v => !v.isUpvote).length
-  )
-  @ApiProperty({
-    type: "number",
-  })
   @OneToMany(() => Vote, vote => vote.post, {
     eager: true,
     cascade: true,
@@ -87,16 +48,12 @@ export class Post {
   })
   comments!: Comment[];
 
-  @Expose()
-  @ApiProperty()
   @CreateDateColumn({
     type: "datetime",
     default: () => "CURRENT_TIMESTAMP",
   })
   createdAt!: Date;
 
-  @Expose()
-  @ApiProperty()
   @UpdateDateColumn({
     type: "datetime",
     default: () => "CURRENT_TIMESTAMP",
