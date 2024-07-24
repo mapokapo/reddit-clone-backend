@@ -28,6 +28,7 @@ import { ReqUser } from "src/auth/req-user.decorator";
 import { User } from "src/users/entities/user.entity";
 import { PostResponse } from "./transport/post.response";
 import { ReqMaybeUser } from "src/auth/req-maybe-user.decorator";
+import { FilterOptionsQuery } from "./transport/filter-options.query";
 
 @ApiTags("posts")
 @Controller("posts")
@@ -45,8 +46,11 @@ export class PostsController {
   })
   @UseAuth()
   @Get("feed")
-  async getFeed(@ReqUser() reqUser: User): Promise<PostResponse[]> {
-    const feed = await this.postsService.getFeed(reqUser);
+  async getFeed(
+    @ReqUser() reqUser: User,
+    @Query() filterOptions: FilterOptionsQuery
+  ): Promise<PostResponse[]> {
+    const feed = await this.postsService.getFeed(reqUser, filterOptions);
 
     return feed.map(post => PostResponse.entityToResponse(post, reqUser));
   }
@@ -87,9 +91,13 @@ export class PostsController {
   @Get("user/:userId")
   async findAllByUser(
     @ReqMaybeUser() reqMaybeUser: User | null,
+    @Query() filterOptions: FilterOptionsQuery,
     @Param("userId", ParseIntPipe) userId: number
   ): Promise<PostResponse[]> {
-    const postEntities = await this.postsService.findAllByUser(userId);
+    const postEntities = await this.postsService.findAllByUser(
+      userId,
+      filterOptions
+    );
 
     return postEntities.map(post =>
       PostResponse.entityToResponse(post, reqMaybeUser ?? undefined)
@@ -110,9 +118,13 @@ export class PostsController {
   @Get("community/:communityId")
   async findAll(
     @ReqMaybeUser() reqMaybeUser: User | null,
+    @Query() filterOptions: FilterOptionsQuery,
     @Param("communityId", ParseIntPipe) communityId: number
   ): Promise<PostResponse[]> {
-    const postEntities = await this.postsService.findAll(communityId);
+    const postEntities = await this.postsService.findAll(
+      communityId,
+      filterOptions
+    );
 
     return postEntities.map(post =>
       PostResponse.entityToResponse(post, reqMaybeUser ?? undefined)

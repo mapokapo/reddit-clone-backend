@@ -12,6 +12,22 @@ import { Repository } from "typeorm";
 import { User } from "src/users/entities/user.entity";
 import { Community } from "src/communities/entities/community.entity";
 import { Vote } from "src/votes/vote.entity";
+import {
+  FilterOptionsQuery,
+  SortBy,
+  Timespan,
+} from "./transport/filter-options.query";
+
+export type ForEntity =
+  | {
+      user: User;
+    }
+  | {
+      community: Community;
+    }
+  | {
+      communities: Community[];
+    };
 
 @Injectable()
 export class PostsService {
@@ -25,6 +41,71 @@ export class PostsService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>
   ) {}
+
+  private async getPosts(
+    predicate: ForEntity,
+    filterOptions: FilterOptionsQuery
+  ) {
+    const { sortBy, timespan, take, skip } = filterOptions;
+
+    let cutoffDate: Date;
+    const now = new Date();
+    switch (timespan) {
+      case Timespan.Day:
+        cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case Timespan.Week:
+        cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case Timespan.Month:
+        cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case Timespan.Year:
+        cutoffDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      case Timespan.AllTime:
+      default:
+        cutoffDate = new Date(0); // No limit
+        break;
+    }
+
+    const queryBuilder = this.postsRepository
+      .createQueryBuilder("post")
+      .leftJoinAndSelect("post.votes", "vote")
+      .leftJoinAndSelect("vote.voter", "voter")
+      .leftJoinAndSelect("post.community", "community")
+      .leftJoinAndSelect("post.author", "author");
+
+    if ("user" in predicate) {
+      queryBuilder.where("post.author.id = :userId", {
+        userId: predicate.user.id,
+      });
+    } else if ("communities" in predicate) {
+      queryBuilder.where("community.id IN (:...communityIds)", {
+        communityIds: predicate.communities.map(c => c.id),
+      });
+    } else {
+      queryBuilder.where("community.id = :communityId", {
+        communityId: predicate.community.id,
+      });
+    }
+
+    queryBuilder.andWhere("post.createdAt > :cutoffDate", { cutoffDate });
+
+    if (sortBy === SortBy.New) {
+      queryBuilder.orderBy("post.createdAt", "DESC");
+    } else {
+      queryBuilder
+        .addSelect(
+          "SUM(CASE WHEN vote.isUpvote = 1 THEN 1 ELSE -1 END)",
+          "voteValue"
+        )
+        .groupBy("vote.id")
+        .orderBy("voteValue", "DESC");
+    }
+
+    return await queryBuilder.skip(skip).take(take).getMany();
+  }
 
   async create(user: User, createPostDto: CreatePostDto): Promise<Post> {
     const community = await this.communityRepository.findOne({
@@ -55,7 +136,10 @@ export class PostsService {
     return await this.postsRepository.save(post);
   }
 
-  async findAll(communityId: number): Promise<Post[]> {
+  async findAll(
+    communityId: number,
+    filterOptions: FilterOptionsQuery
+  ): Promise<Post[]> {
     const community = await this.communityRepository.findOne({
       where: { id: communityId },
     });
@@ -64,16 +148,18 @@ export class PostsService {
       throw new NotFoundException("Community not found");
     }
 
-    return await this.postsRepository.find({
-      where: {
-        community: {
-          id: communityId,
-        },
+    return await this.getPosts(
+      {
+        community: community,
       },
-    });
+      filterOptions
+    );
   }
 
-  async findAllByUser(userId: number): Promise<Post[]> {
+  async findAllByUser(
+    userId: number,
+    filterOptions: FilterOptionsQuery
+  ): Promise<Post[]> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
@@ -82,13 +168,68 @@ export class PostsService {
       throw new NotFoundException("User not found");
     }
 
-    return await this.postsRepository.find({
-      where: {
-        author: {
-          id: userId,
-        },
+    return await this.getPosts(
+      {
+        user: user,
       },
-    });
+      filterOptions
+    );
+  }
+
+  async getFeed(
+    user: User,
+    filterOptions: FilterOptionsQuery
+  ): Promise<Post[]> {
+    const posts = await this.getPosts(
+      {
+        user,
+      },
+      filterOptions
+    );
+
+    if (posts.length < 10) {
+      const newestCommunities = await this.communityRepository.find({
+        order: {
+          createdAt: "DESC",
+        },
+        take: 10 - posts.length,
+        where: {
+          isPrivate: false,
+        },
+      });
+
+      const newestPosts = (
+        await Promise.all(
+          newestCommunities.map(
+            async community =>
+              await this.getPosts(
+                {
+                  community,
+                },
+                {
+                  ...filterOptions,
+                  take: 1,
+                }
+              )
+          )
+        )
+      ).flat();
+
+      if (filterOptions.sortBy === SortBy.New) {
+        newestPosts.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+        );
+      } else {
+        newestPosts.sort(
+          (a, b) =>
+            b.votes.filter(vote => vote.isUpvote).length -
+            a.votes.filter(vote => vote.isUpvote).length
+        );
+      }
+
+      posts.push(...newestPosts);
+    }
+    return posts;
   }
 
   async findOne(id: number): Promise<Post | null> {
@@ -245,52 +386,5 @@ export class PostsService {
     post.votes = post.votes.filter(vote => vote.voter.id !== user.id);
 
     await this.postsRepository.save(post);
-  }
-
-  async getFeed(user: User): Promise<Post[]> {
-    const posts = (
-      await Promise.all(
-        user.communities.map(community =>
-          this.postsRepository.find({
-            where: {
-              community: {
-                id: community.id,
-              },
-            },
-            take: 10,
-          })
-        )
-      )
-    ).flat();
-
-    if (posts.length < 10) {
-      const newestCommunities = await this.communityRepository.find({
-        order: {
-          createdAt: "DESC",
-        },
-        take: 10 - posts.length,
-        where: {
-          isPrivate: false,
-        },
-      });
-
-      const newestPosts = (
-        await Promise.all(
-          newestCommunities.map(community =>
-            this.postsRepository.find({
-              where: {
-                community: {
-                  id: community.id,
-                },
-              },
-              take: 1,
-            })
-          )
-        )
-      ).flat();
-
-      posts.push(...newestPosts);
-    }
-    return posts;
   }
 }

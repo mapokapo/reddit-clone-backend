@@ -68,6 +68,7 @@ export class PostResponse {
     response.votes =
       entity.votes.filter(vote => vote.isUpvote).length -
       entity.votes.filter(vote => !vote.isUpvote).length;
+
     response.createdAt = entity.createdAt;
     response.updatedAt = entity.updatedAt;
 

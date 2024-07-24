@@ -27,13 +27,15 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     const authorizationHeader = request.headers.authorization;
+
     if (authorizationHeader === undefined) {
       if (!authMode.startsWith("maybe")) {
         throw new UnauthorizedException();
       }
+      return true; // "maybe*" auth modes
     }
 
-    const token = authorizationHeader?.split(" ")[1];
+    const token = authorizationHeader.split(" ")[1];
     if (token === undefined) {
       throw new UnauthorizedException();
     }
