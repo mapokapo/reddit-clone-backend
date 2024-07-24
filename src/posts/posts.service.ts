@@ -29,7 +29,6 @@ export class PostsService {
   async create(user: User, createPostDto: CreatePostDto): Promise<Post> {
     const community = await this.communityRepository.findOne({
       where: { id: createPostDto.communityId },
-      relations: ["members"],
     });
 
     if (community === null) {
@@ -37,9 +36,12 @@ export class PostsService {
     }
 
     if (
+      community.isPrivate &&
       !user.communities.find(userCommunity => userCommunity.id === community.id)
     ) {
-      throw new UnauthorizedException("You are not a member of this community");
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
     }
 
     const post = new Post();
@@ -104,6 +106,7 @@ export class PostsService {
   ): Promise<Post> {
     const post = await this.postsRepository.findOne({
       where: { id: id },
+      relations: ["author", "community"],
     });
 
     if (post === null) {
@@ -111,9 +114,12 @@ export class PostsService {
     }
 
     if (
+      post.community.isPrivate &&
       !user.communities.find(community => community.id === post.community.id)
     ) {
-      throw new UnauthorizedException("You are not a member of this community");
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
     }
 
     if (post.author.id !== user.id) {
@@ -129,6 +135,7 @@ export class PostsService {
   async remove(user: User, id: number): Promise<void> {
     const post = await this.postsRepository.findOne({
       where: { id: id },
+      relations: ["author", "community"],
     });
 
     if (post === null) {
@@ -136,9 +143,12 @@ export class PostsService {
     }
 
     if (
+      post.community.isPrivate &&
       !user.communities.find(community => community.id === post.community.id)
     ) {
-      throw new UnauthorizedException("You are not a member of this community");
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
     }
 
     if (post.author.id !== user.id) {
@@ -156,6 +166,7 @@ export class PostsService {
         votes: {
           voter: true,
         },
+        community: true,
       },
     });
 
@@ -164,16 +175,19 @@ export class PostsService {
     }
 
     if (
+      post.community.isPrivate &&
       !user.communities.find(community => community.id === post.community.id)
     ) {
-      throw new UnauthorizedException("You are not a member of this community");
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
     }
 
     if (post.author.id === user.id) {
       throw new UnauthorizedException("You cannot vote on your own post");
     }
 
-    const userAlreadyVoted = post.votes.some(vote => vote.voter.id === user.id);
+    const existingUserVote = post.votes.find(vote => vote.voter.id === user.id);
     const userAlreadyDidSameVote = post.votes.some(
       vote => vote.voter.id === user.id && vote.isUpvote === isUpvote
     );
@@ -184,15 +198,8 @@ export class PostsService {
       );
     }
 
-    if (userAlreadyVoted) {
-      // change the user's vote
-      const vote = post.votes.find(vote => vote.voter.id === user.id);
-
-      if (vote === undefined) {
-        throw new NotFoundException("Vote not found");
-      }
-
-      vote.isUpvote = isUpvote;
+    if (existingUserVote !== undefined) {
+      existingUserVote.isUpvote = isUpvote;
     } else {
       const vote = new Vote();
       vote.post = post;
@@ -212,6 +219,7 @@ export class PostsService {
         votes: {
           voter: true,
         },
+        community: true,
       },
     });
 
@@ -220,9 +228,12 @@ export class PostsService {
     }
 
     if (
+      post.community.isPrivate &&
       !user.communities.find(community => community.id === post.community.id)
     ) {
-      throw new UnauthorizedException("You are not a member of this community");
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
     }
 
     const vote = post.votes.find(vote => vote.voter.id === user.id);
@@ -260,6 +271,9 @@ export class PostsService {
           createdAt: "DESC",
         },
         take: 10 - posts.length,
+        where: {
+          isPrivate: false,
+        },
       });
 
       const newestPosts = (

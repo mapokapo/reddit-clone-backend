@@ -32,6 +32,7 @@ export class CommentsService {
       where: {
         id: createCommentDto.postId,
       },
+      relations: ["community"],
     });
 
     if (post === null) {
@@ -39,9 +40,12 @@ export class CommentsService {
     }
 
     if (
+      post.community.isPrivate &&
       !user.communities.find(community => community.id === post.community.id)
     ) {
-      throw new UnauthorizedException("You are not a member of this community");
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
     }
 
     const parent =
@@ -141,33 +145,11 @@ export class CommentsService {
       where: {
         id,
       },
-    });
-
-    if (comment === null) {
-      throw new NotFoundException("Comment not found");
-    }
-
-    if (comment.author.id !== user.id) {
-      throw new UnauthorizedException("You are not the author of this comment");
-    }
-
-    if (
-      !user.communities.find(
-        community => community.id === comment.post.community.id
-      )
-    ) {
-      throw new UnauthorizedException("You are not a member of this community");
-    }
-
-    comment.content = updateCommentDto.content ?? comment.content;
-
-    return await this.commentRepository.save(comment);
-  }
-
-  async remove(user: User, id: number): Promise<void> {
-    const comment = await this.commentRepository.findOne({
-      where: {
-        id,
+      relations: {
+        author: true,
+        post: {
+          community: true,
+        },
       },
     });
 
@@ -180,11 +162,51 @@ export class CommentsService {
     }
 
     if (
+      comment.post.community.isPrivate &&
       !user.communities.find(
         community => community.id === comment.post.community.id
       )
     ) {
-      throw new UnauthorizedException("You are not a member of this community");
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
+    }
+
+    comment.content = updateCommentDto.content ?? comment.content;
+
+    return await this.commentRepository.save(comment);
+  }
+
+  async remove(user: User, id: number): Promise<void> {
+    const comment = await this.commentRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        author: true,
+        post: {
+          community: true,
+        },
+      },
+    });
+
+    if (comment === null) {
+      throw new NotFoundException("Comment not found");
+    }
+
+    if (comment.author.id !== user.id) {
+      throw new UnauthorizedException("You are not the author of this comment");
+    }
+
+    if (
+      comment.post.community.isPrivate &&
+      !user.communities.find(
+        community => community.id === comment.post.community.id
+      )
+    ) {
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
     }
 
     await this.commentRepository.remove(comment);
@@ -198,6 +220,9 @@ export class CommentsService {
         votes: {
           voter: true,
         },
+        post: {
+          community: true,
+        },
       },
     });
 
@@ -206,11 +231,14 @@ export class CommentsService {
     }
 
     if (
+      comment.post.community.isPrivate &&
       !user.communities.find(
         community => community.id === comment.post.community.id
       )
     ) {
-      throw new UnauthorizedException("You are not a member of this community");
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
     }
 
     if (comment.author.id === user.id) {
@@ -258,6 +286,9 @@ export class CommentsService {
         votes: {
           voter: true,
         },
+        post: {
+          community: true,
+        },
       },
     });
 
@@ -266,11 +297,14 @@ export class CommentsService {
     }
 
     if (
+      comment.post.community.isPrivate &&
       !user.communities.find(
         community => community.id === comment.post.community.id
       )
     ) {
-      throw new UnauthorizedException("You are not a member of this community");
+      throw new UnauthorizedException(
+        "You are not a member of this private community"
+      );
     }
 
     const vote = comment.votes.find(vote => vote.voter.id === user.id);

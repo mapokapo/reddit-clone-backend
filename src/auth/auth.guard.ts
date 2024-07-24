@@ -28,10 +28,12 @@ export class AuthGuard implements CanActivate {
 
     const authorizationHeader = request.headers.authorization;
     if (authorizationHeader === undefined) {
-      throw new UnauthorizedException();
+      if (!authMode.startsWith("maybe")) {
+        throw new UnauthorizedException();
+      }
     }
 
-    const token = authorizationHeader.split(" ")[1];
+    const token = authorizationHeader?.split(" ")[1];
     if (token === undefined) {
       throw new UnauthorizedException();
     }
@@ -42,7 +44,7 @@ export class AuthGuard implements CanActivate {
 
       request.decodedIdToken = decodedIdToken;
 
-      if (authMode === "no-profile") {
+      if (authMode.endsWith("no-profile")) {
         return true;
       }
 

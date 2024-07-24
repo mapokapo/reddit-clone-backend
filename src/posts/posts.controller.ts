@@ -19,7 +19,6 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { Post as PostEntity } from "./entities/post.entity";
 import { PostsService } from "./posts.service";
 import { CreatePostRequest } from "./transport/create-post.request";
 import { CreatePostDto } from "./dtos/create-post.dto";
@@ -27,6 +26,8 @@ import { UpdatePostRequest } from "./transport/update-post.request";
 import { UseAuth } from "src/auth/use-auth.decorator";
 import { ReqUser } from "src/auth/req-user.decorator";
 import { User } from "src/users/entities/user.entity";
+import { PostResponse } from "./transport/post.response";
+import { ReqMaybeUser } from "src/auth/req-maybe-user.decorator";
 
 @ApiTags("posts")
 @Controller("posts")
@@ -35,7 +36,7 @@ export class PostsController {
 
   @ApiOkResponse({
     description: "OK",
-    type: PostEntity,
+    type: PostResponse,
     isArray: true,
   })
   @ApiOperation({
@@ -44,11 +45,13 @@ export class PostsController {
   })
   @UseAuth()
   @Get("feed")
-  async getFeed(@ReqUser() reqUser: User): Promise<PostEntity[]> {
-    return await this.postsService.getFeed(reqUser);
+  async getFeed(@ReqUser() reqUser: User): Promise<PostResponse[]> {
+    const feed = await this.postsService.getFeed(reqUser);
+
+    return feed.map(post => PostResponse.entityToResponse(post, reqUser));
   }
 
-  @ApiCreatedResponse({ description: "Created", type: PostEntity })
+  @ApiCreatedResponse({ description: "Created", type: PostResponse })
   @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Create a new post in a community",
@@ -60,34 +63,42 @@ export class PostsController {
     @ReqUser() reqUser: User,
     @Param("communityId", ParseIntPipe) communityId: number,
     @Body() createPostRequest: CreatePostRequest
-  ): Promise<PostEntity> {
+  ): Promise<PostResponse> {
     const createPostDto = new CreatePostDto();
     createPostDto.title = createPostRequest.title;
     createPostDto.content = createPostRequest.content;
     createPostDto.communityId = communityId;
 
-    return await this.postsService.create(reqUser, createPostDto);
+    const postEntity = await this.postsService.create(reqUser, createPostDto);
+
+    return PostResponse.entityToResponse(postEntity, reqUser);
   }
 
   @ApiOkResponse({
     description: "OK",
-    type: PostEntity,
+    type: PostResponse,
     isArray: true,
   })
   @ApiOperation({
     summary: "Find all posts by a user",
     operationId: "findAllPostsByUser",
   })
+  @UseAuth("maybe")
   @Get("user/:userId")
   async findAllByUser(
+    @ReqMaybeUser() reqMaybeUser: User | null,
     @Param("userId", ParseIntPipe) userId: number
-  ): Promise<PostEntity[]> {
-    return await this.postsService.findAllByUser(userId);
+  ): Promise<PostResponse[]> {
+    const postEntities = await this.postsService.findAllByUser(userId);
+
+    return postEntities.map(post =>
+      PostResponse.entityToResponse(post, reqMaybeUser ?? undefined)
+    );
   }
 
   @ApiOkResponse({
     description: "OK",
-    type: PostEntity,
+    type: PostResponse,
     isArray: true,
   })
   @ApiNotFoundResponse({ description: "Not found" })
@@ -95,34 +106,44 @@ export class PostsController {
     summary: "Find all posts in a community",
     operationId: "findAllPosts",
   })
+  @UseAuth("maybe")
   @Get("community/:communityId")
   async findAll(
+    @ReqMaybeUser() reqMaybeUser: User | null,
     @Param("communityId", ParseIntPipe) communityId: number
-  ): Promise<PostEntity[]> {
-    return await this.postsService.findAll(communityId);
+  ): Promise<PostResponse[]> {
+    const postEntities = await this.postsService.findAll(communityId);
+
+    return postEntities.map(post =>
+      PostResponse.entityToResponse(post, reqMaybeUser ?? undefined)
+    );
   }
 
   @ApiOkResponse({
     description: "OK",
-    type: PostEntity,
+    type: PostResponse,
   })
   @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Find a post by ID",
     operationId: "findOnePost",
   })
+  @UseAuth("maybe")
   @Get(":id")
-  async findOne(@Param("id", ParseIntPipe) id: number): Promise<PostEntity> {
+  async findOne(
+    @ReqMaybeUser() reqMaybeUser: User | null,
+    @Param("id", ParseIntPipe) id: number
+  ): Promise<PostResponse> {
     const post = await this.postsService.findOne(id);
 
     if (post === null) {
       throw new NotFoundException("Post not found");
     }
 
-    return post;
+    return PostResponse.entityToResponse(post, reqMaybeUser ?? undefined);
   }
 
-  @ApiOkResponse({ description: "OK", type: PostEntity })
+  @ApiOkResponse({ description: "OK", type: PostResponse })
   @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Update a post",
@@ -134,8 +155,14 @@ export class PostsController {
     @ReqUser() reqUser: User,
     @Param("id", ParseIntPipe) id: number,
     @Body() updatePostRequest: UpdatePostRequest
-  ): Promise<PostEntity> {
-    return await this.postsService.update(reqUser, id, updatePostRequest);
+  ): Promise<PostResponse> {
+    const postEntity = await this.postsService.update(
+      reqUser,
+      id,
+      updatePostRequest
+    );
+
+    return PostResponse.entityToResponse(postEntity, reqUser);
   }
 
   @ApiNoContentResponse({ description: "No content" })

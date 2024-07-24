@@ -32,6 +32,11 @@ export class Community {
   @Column()
   description!: string;
 
+  @Expose()
+  @ApiProperty()
+  @Column()
+  isPrivate!: boolean;
+
   @Expose({
     name: "ownerId",
   })

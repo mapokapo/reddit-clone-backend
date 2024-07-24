@@ -64,6 +64,9 @@ export class SeederService {
     community.name = faker.lorem.words(2);
     community.description = faker.lorem.sentence();
     community.owner = owner;
+    community.isPrivate = faker.datatype.boolean({
+      probability: 0.2,
+    });
     community.members = members.includes(owner) ? members : [...members, owner];
     community.posts = [];
 
