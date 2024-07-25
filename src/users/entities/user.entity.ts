@@ -3,6 +3,7 @@ import { Exclude, Expose } from "class-transformer";
 import { Comment } from "src/comments/entities/comment.entity";
 import { Community } from "src/communities/entities/community.entity";
 import { Post } from "src/posts/entities/post.entity";
+import { Reply } from "src/replies/entities/reply.entity";
 import { Vote } from "src/votes/vote.entity";
 import {
   Column,
@@ -68,9 +69,11 @@ export class User {
   @OneToMany(() => Comment, comment => comment.author)
   comments!: Comment[];
 
+  @OneToMany(() => Reply, reply => reply.author)
+  replies!: Reply[];
+
   @ManyToMany(() => Community, community => community.members)
   communities!: Community[];
-
   @Expose()
   @ApiProperty()
   @CreateDateColumn({

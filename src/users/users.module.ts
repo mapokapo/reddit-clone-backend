@@ -7,12 +7,14 @@ import { AuthModule } from "src/auth/auth.module";
 import { FirebaseModule } from "src/firebase/firebase.module";
 import { Post } from "src/posts/entities/post.entity";
 import { Vote } from "src/votes/vote.entity";
+import { Comment } from "src/comments/entities/comment.entity";
+import { Reply } from "src/replies/entities/reply.entity";
 
 @Module({
   imports: [
     forwardRef(() => AuthModule),
     FirebaseModule,
-    TypeOrmModule.forFeature([User, Post, Vote]),
+    TypeOrmModule.forFeature([User, Post, Vote, Comment, Reply]),
   ],
   controllers: [UsersController],
   providers: [UsersService],

@@ -2,6 +2,9 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   UnauthorizedException,
@@ -11,6 +14,7 @@ import {
   ApiCreatedResponse,
   ApiExtraModels,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -27,6 +31,10 @@ import { ReqUser } from "src/auth/req-user.decorator";
 import { GetUserDataQuery } from "./transport/get-user-data.query";
 import { Vote } from "src/votes/vote.entity";
 import { PostResponse } from "src/posts/transport/post.response";
+import { CommentResponse } from "src/comments/transport/comment.response";
+import { ReplyResponse } from "src/replies/transport/reply.response";
+import { Comment } from "src/comments/entities/comment.entity";
+import { Reply } from "src/replies/entities/reply.entity";
 
 @ApiTags("users")
 @Controller("users")
@@ -99,7 +107,7 @@ export class UsersController {
   async getUserData(
     @ReqUser() reqUser: User,
     @Query() query: GetUserDataQuery
-  ): Promise<(PostResponse | Vote)[] | null> {
+  ): Promise<(PostResponse | CommentResponse | ReplyResponse | Vote)[] | null> {
     const data = await this.usersService.getUserData(
       reqUser,
       query.include ?? []
@@ -112,9 +120,32 @@ export class UsersController {
     return data.map(item => {
       if (item instanceof PostEntity) {
         return PostResponse.entityToResponse(item, reqUser);
+      } else if (item instanceof Reply) {
+        return ReplyResponse.entityToResponse(item, reqUser);
+      } else if (item instanceof Comment) {
+        return CommentResponse.entityToResponse(item, reqUser);
       } else {
         return item;
       }
     });
+  }
+
+  @ApiOkResponse({ description: "OK", type: User })
+  @ApiNotFoundResponse({ description: "Not found" })
+  @ApiOperation({
+    summary: "Get a user's profile by ID",
+    operationId: "getUserById",
+  })
+  @Get(":id")
+  async getUserById(
+    @Param("id", new ParseIntPipe()) id: number
+  ): Promise<User> {
+    const user = await this.usersService.findOneById(id);
+
+    if (user === null) {
+      throw new NotFoundException("User not found");
+    }
+
+    return user;
   }
 }

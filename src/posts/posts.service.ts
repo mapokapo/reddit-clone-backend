@@ -18,7 +18,7 @@ import {
   Timespan,
 } from "./transport/filter-options.query";
 
-export type ForEntity =
+type ForEntity =
   | {
       user: User;
     }
@@ -202,28 +202,28 @@ export class PostsService {
         await Promise.all(
           newestCommunities.map(
             async community =>
-              await this.getPosts(
-                {
-                  community,
+              await this.postsRepository.find({
+                where: {
+                  community: {
+                    id: community.id,
+                  },
                 },
-                {
-                  ...filterOptions,
-                  take: 1,
-                }
-              )
+                order: {
+                  createdAt: "DESC",
+                },
+                take: 1,
+              })
           )
         )
       ).flat();
 
-      if (filterOptions.sortBy === SortBy.New) {
-        newestPosts.sort(
-          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-        );
-      } else {
+      if (filterOptions.sortBy === SortBy.Top) {
         newestPosts.sort(
           (a, b) =>
             b.votes.filter(vote => vote.isUpvote).length -
-            a.votes.filter(vote => vote.isUpvote).length
+            b.votes.filter(vote => !vote.isUpvote).length -
+            (a.votes.filter(vote => vote.isUpvote).length -
+              a.votes.filter(vote => !vote.isUpvote).length)
         );
       }
 
@@ -332,7 +332,7 @@ export class PostsService {
     );
 
     if (userAlreadyDidSameVote) {
-      throw new NotFoundException(
+      throw new BadRequestException(
         `You cannot ${isUpvote ? "upvote" : "downvote"} more than once`
       );
     }

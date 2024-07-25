@@ -1,7 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose, Transform } from "class-transformer";
-import { Post } from "src/posts/entities/post.entity";
-import { Reply } from "src/replies/entities/reply.entity";
+import { Comment } from "src/comments/entities/comment.entity";
 import { User } from "src/users/entities/user.entity";
 import { Vote } from "src/votes/vote.entity";
 import {
@@ -16,7 +15,7 @@ import {
 
 @Exclude()
 @Entity()
-export class Comment {
+export class Reply {
   @Expose()
   @ApiProperty()
   @PrimaryGeneratedColumn()
@@ -35,25 +34,25 @@ export class Comment {
     name: "authorId",
     type: "number",
   })
-  @ManyToOne(() => User, user => user.comments, {
+  @ManyToOne(() => User, user => user.replies, {
     eager: true,
     onDelete: "CASCADE",
   })
   author!: User;
 
   @Expose({
-    name: "postId",
+    name: "commentId",
   })
-  @Transform(({ value }: { value: Post }) => value.id)
+  @Transform(({ value }: { value: Comment }) => value.id)
   @ApiProperty({
-    name: "postId",
+    name: "commentId",
     type: "number",
   })
-  @ManyToOne(() => Post, post => post.comments, {
+  @ManyToOne(() => Comment, comment => comment.replies, {
     eager: true,
     onDelete: "CASCADE",
   })
-  post!: Post;
+  comment!: Comment;
 
   // eslint-disable-next-line @darraghor/nestjs-typed/api-property-returning-array-should-set-array
   @Expose()
@@ -65,25 +64,11 @@ export class Comment {
   @ApiProperty({
     type: "number",
   })
-  @OneToMany(() => Vote, vote => vote.comment, {
+  @OneToMany(() => Vote, vote => vote.reply, {
     eager: true,
     cascade: true,
   })
   votes!: Vote[];
-
-  // eslint-disable-next-line @darraghor/nestjs-typed/api-property-returning-array-should-set-array
-  @Expose({
-    name: "replyCount",
-  })
-  @Transform(({ value }: { value: Reply[] }) => value.length)
-  @ApiProperty({
-    name: "replyCount",
-    type: "number",
-  })
-  @OneToMany(() => Reply, reply => reply.comment, {
-    cascade: true,
-  })
-  replies!: Reply[];
 
   @Expose()
   @ApiProperty()

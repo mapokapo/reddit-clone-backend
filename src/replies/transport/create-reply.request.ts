@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsString } from "class-validator";
 
-export class CreateCommentRequest {
+export class CreateReplyRequest {
   @ApiProperty()
   @IsString()
   content!: string;

@@ -197,7 +197,7 @@ export class PostsController {
   @ApiOperation({ summary: "Vote a post up or down", operationId: "votePost" })
   @UseAuth()
   @Post(":id/vote")
-  async upvote(
+  async vote(
     @ReqUser() reqUser: User,
     @Param("id", ParseIntPipe) id: number,
     @Query("isUpvote", ParseBoolPipe) isUpvote: boolean

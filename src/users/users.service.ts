@@ -11,6 +11,8 @@ import { Repository } from "typeorm";
 import { UserDataType } from "./dtos/user-data-type.dto";
 import { Post as PostEntity } from "src/posts/entities/post.entity";
 import { Vote } from "src/votes/vote.entity";
+import { Comment } from "src/comments/entities/comment.entity";
+import { Reply } from "src/replies/entities/reply.entity";
 
 @Injectable()
 export class UsersService {
@@ -20,7 +22,11 @@ export class UsersService {
     @InjectRepository(PostEntity)
     private readonly postRepository: Repository<PostEntity>,
     @InjectRepository(Vote)
-    private readonly voteRepository: Repository<Vote>
+    private readonly voteRepository: Repository<Vote>,
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(Reply)
+    private readonly repliesRepository: Repository<Reply>
   ) {}
 
   async findOneByEmail(email: string): Promise<User | null> {
@@ -122,8 +128,8 @@ export class UsersService {
   async getUserData(
     user: User,
     include: UserDataType[]
-  ): Promise<(PostEntity | Vote)[] | null> {
-    let data: (PostEntity | Vote)[] = [];
+  ): Promise<(PostEntity | Comment | Reply | Vote)[] | null> {
+    let data: (PostEntity | Comment | Reply | Vote)[] = [];
 
     if (include.includes(UserDataType.POSTS)) {
       const posts = await this.postRepository.find({
@@ -137,6 +143,18 @@ export class UsersService {
       data = data.concat(posts);
     }
 
+    if (include.includes(UserDataType.COMMENTS)) {
+      const comments = await this.commentRepository.find({
+        where: {
+          author: {
+            id: user.id,
+          },
+        },
+      });
+
+      data = data.concat(comments);
+    }
+
     if (include.includes(UserDataType.VOTES)) {
       const votes = await this.voteRepository.find({
         where: {
@@ -147,6 +165,18 @@ export class UsersService {
       });
 
       data = data.concat(votes);
+    }
+
+    if (include.includes(UserDataType.REPLIES)) {
+      const replies = await this.repliesRepository.find({
+        where: {
+          author: {
+            id: user.id,
+          },
+        },
+      });
+
+      data = data.concat(replies);
     }
 
     return data;

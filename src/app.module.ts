@@ -15,6 +15,8 @@ import { AppService } from "./app.service";
 import { SeederModule } from "./seeder/seeder.module";
 import { CommentsModule } from "./comments/comments.module";
 import { Comment } from "./comments/entities/comment.entity";
+import { RepliesModule } from "./replies/replies.module";
+import { Reply } from "./replies/entities/reply.entity";
 
 @Module({
   imports: [
@@ -23,11 +25,12 @@ import { Comment } from "./comments/entities/comment.entity";
     CommunitiesModule,
     FirebaseModule,
     PostsModule,
+    RepliesModule,
     SeederModule,
     TypeOrmModule.forRoot({
       type: "sqlite",
       database: "./sqlite.db",
-      entities: [Comment, Community, Post, User, Vote],
+      entities: [Comment, Community, Post, Reply, User, Vote],
       synchronize: true,
     }),
     UsersModule,

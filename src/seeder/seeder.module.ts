@@ -6,9 +6,12 @@ import { Community } from "src/communities/entities/community.entity";
 import { Post } from "src/posts/entities/post.entity";
 import { Vote } from "src/votes/vote.entity";
 import { Comment } from "src/comments/entities/comment.entity";
+import { Reply } from "src/replies/entities/reply.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Community, Post, Vote, Comment])],
+  imports: [
+    TypeOrmModule.forFeature([User, Community, Post, Vote, Comment, Reply]),
+  ],
   providers: [SeederService],
   exports: [SeederService],
 })

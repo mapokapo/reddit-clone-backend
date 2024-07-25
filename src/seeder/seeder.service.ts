@@ -7,6 +7,7 @@ import { Vote } from "src/votes/vote.entity";
 import { Repository } from "typeorm";
 import { faker } from "@faker-js/faker";
 import { Comment } from "src/comments/entities/comment.entity";
+import { Reply } from "src/replies/entities/reply.entity";
 
 @Injectable()
 export class SeederService {
@@ -20,7 +21,9 @@ export class SeederService {
     @InjectRepository(Vote)
     private readonly voteRepository: Repository<Vote>,
     @InjectRepository(Comment)
-    private readonly commentRepository: Repository<Comment>
+    private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(Reply)
+    private readonly replyRepository: Repository<Reply>
   ) {}
 
   private genUser() {
@@ -39,6 +42,7 @@ export class SeederService {
     user.votes = [];
     user.ownedCommunities = [];
     user.comments = [];
+    user.replies = [];
 
     return user;
   }
@@ -118,12 +122,16 @@ export class SeederService {
     return post;
   }
 
-  private async genPosts(count: number, users: User[]) {
+  private async genPosts(
+    count: number,
+    users: User[],
+    communities: Community[]
+  ) {
     const posts = Array.from({ length: count }, () => {
       const author = faker.helpers.arrayElement(
         users.filter(user => user.communities.length > 0)
       );
-      const community = faker.helpers.arrayElement(author.communities);
+      const community = faker.helpers.arrayElement(communities);
       const post = this.genPost({
         author,
         community,
@@ -142,7 +150,6 @@ export class SeederService {
   private genComment({
     author,
     post,
-    parent,
   }: {
     author: User;
     post: Post;
@@ -151,10 +158,9 @@ export class SeederService {
     const comment = new Comment();
     comment.content = faker.lorem.sentence();
     comment.author = author;
-    comment.children = [];
     comment.votes = [];
+    comment.replies = [];
     comment.post = post;
-    comment.parent = parent ?? undefined;
 
     author.comments.push(comment);
     post.comments.push(comment);
@@ -162,7 +168,7 @@ export class SeederService {
     return comment;
   }
 
-  private async genRootComments(count: number, users: User[], posts: Post[]) {
+  private async genComments(count: number, users: User[], posts: Post[]) {
     const comments = Array.from({ length: count }, () => {
       const author = faker.helpers.arrayElement(
         users.filter(user => user.communities.length > 0)
@@ -180,37 +186,54 @@ export class SeederService {
     return comments;
   }
 
-  private async genChildComments(
-    count: number,
-    users: User[],
-    rootComments: Comment[]
-  ) {
-    const comments = Array.from({ length: count }, () => {
+  private genReply({ author, comment }: { author: User; comment: Comment }) {
+    const reply = new Reply();
+    reply.content = faker.lorem.sentence();
+    reply.author = author;
+    reply.comment = comment;
+    reply.votes = [];
+
+    author.replies.push(reply);
+    comment.replies.push(reply);
+
+    return reply;
+  }
+
+  private async genReplies(count: number, users: User[], comments: Comment[]) {
+    const replies = Array.from({ length: count }, () => {
       const author = faker.helpers.arrayElement(
         users.filter(user => user.communities.length > 0)
       );
-      const parent = faker.helpers.arrayElement(rootComments);
-      const post = parent.post;
-      const comment = this.genComment({ author, post, parent });
+      const comment = faker.helpers.arrayElement(comments);
+      const reply = this.genReply({ author, comment });
 
-      return comment;
+      return reply;
     });
 
-    for (const comment of comments) {
-      await this.commentRepository.save(comment);
+    for (const reply of replies) {
+      await this.replyRepository.save(reply);
     }
 
-    return comments;
+    return replies;
   }
 
-  private genVote({ user, item }: { user: User; item: Post | Comment }) {
+  private genVote({
+    user,
+    item,
+  }: {
+    user: User;
+    item: Post | Comment | Reply;
+  }) {
     const vote = new Vote();
     vote.voter = user;
     if (item instanceof Post) {
       vote.post = item;
       item.votes.push(vote);
-    } else {
+    } else if (item instanceof Comment) {
       vote.comment = item;
+      item.votes.push(vote);
+    } else {
+      vote.reply = item;
       item.votes.push(vote);
     }
     vote.isUpvote = faker.datatype.boolean();
@@ -218,6 +241,42 @@ export class SeederService {
     user.votes.push(vote);
 
     return vote;
+  }
+
+  private genPostVote({ user }: { user: User }) {
+    const post = faker.helpers.arrayElement(
+      user.communities
+        .map(community => community.posts)
+        .reduce((acc, val) => acc.concat(val), [])
+    );
+
+    return this.genVote({ user, item: post });
+  }
+
+  private genCommentVote({ user }: { user: User }) {
+    const comment = faker.helpers.arrayElement(
+      user.communities
+        .map(community => community.posts)
+        .reduce((acc, val) => acc.concat(val), [])
+        .map(post => post.comments)
+        .reduce((acc, val) => acc.concat(val), [])
+    );
+
+    return this.genVote({ user, item: comment });
+  }
+
+  private genReplyVote({ user }: { user: User }) {
+    const reply = faker.helpers.arrayElement(
+      user.communities
+        .map(community => community.posts)
+        .reduce((acc, val) => acc.concat(val), [])
+        .map(post => post.comments)
+        .reduce((acc, val) => acc.concat(val), [])
+        .map(comment => comment.replies)
+        .reduce((acc, val) => acc.concat(val), [])
+    );
+
+    return this.genVote({ user, item: reply });
   }
 
   private async genVotes(count: number, users: User[]) {
@@ -229,21 +288,16 @@ export class SeederService {
             user.communities.some(community => community.posts.length > 0)
         )
       );
-      const community = faker.helpers.arrayElement(
-        user.communities.filter(community => community.posts.length > 0)
-      );
-      let item: Post | Comment;
-      if (
-        faker.datatype.boolean() &&
-        community.posts.some(post => post.comments.length > 0)
-      ) {
-        item = faker.helpers.arrayElement(
-          community.posts.flatMap(post => post.comments)
-        );
+      const chosen = faker.number.int({ min: 0, max: 2 });
+      let vote: Vote;
+
+      if (chosen === 0) {
+        vote = this.genPostVote({ user });
+      } else if (chosen === 1) {
+        vote = this.genCommentVote({ user });
       } else {
-        item = faker.helpers.arrayElement(community.posts);
+        vote = this.genReplyVote({ user });
       }
-      const vote = this.genVote({ user, item });
 
       return vote;
     });
@@ -275,19 +329,12 @@ export class SeederService {
   }
 
   async seed() {
-    const users = await this.genUsers(50);
-    await this.genCommunities(10, users);
-    const posts = await this.genPosts(30, users);
-    const rootComments = await this.genRootComments(30, users, posts);
-    const commentsLayer1 = await this.genChildComments(15, users, rootComments);
-    const commentsLayer2 = await this.genChildComments(
-      10,
-      users,
-      commentsLayer1
-    );
-    await this.genChildComments(5, users, commentsLayer2);
-    await this.genVotes(100, users);
-
+    const users = await this.genUsers(100);
+    const communities = await this.genCommunities(30, users);
+    const posts = await this.genPosts(70, users, communities);
+    const comments = await this.genComments(150, users, posts);
+    await this.genReplies(100, users, comments);
+    await this.genVotes(300, users);
     await this.genSeedMarkerUser();
   }
 }
