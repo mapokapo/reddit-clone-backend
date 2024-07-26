@@ -294,8 +294,6 @@ export class CommentsService {
       vote.isUpvote = isUpvote;
 
       comment.votes.push(vote);
-
-      console.log(comment.votes);
     }
 
     await this.commentRepository.save(comment);
