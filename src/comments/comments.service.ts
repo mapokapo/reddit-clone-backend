@@ -127,6 +127,7 @@ export class CommentsService {
     comment.author = user;
     comment.post = post;
     comment.votes = [];
+    comment.replies = [];
 
     return await this.commentRepository.save(comment);
   }
@@ -175,6 +176,7 @@ export class CommentsService {
         post: {
           community: true,
         },
+        replies: true,
       },
     });
 
