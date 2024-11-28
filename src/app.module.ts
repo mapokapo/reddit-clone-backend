@@ -17,12 +17,14 @@ import { CommentsModule } from "./comments/comments.module";
 import { Comment } from "./comments/entities/comment.entity";
 import { RepliesModule } from "./replies/replies.module";
 import { Reply } from "./replies/entities/reply.entity";
+import { ConfigModule } from "@nestjs/config";
 
 @Module({
   imports: [
     AuthModule,
     CommentsModule,
     CommunitiesModule,
+    ConfigModule.forRoot(),
     FirebaseModule,
     PostsModule,
     RepliesModule,
