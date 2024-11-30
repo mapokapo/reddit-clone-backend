@@ -90,6 +90,9 @@ export class PostsService {
       queryBuilder.where("post.author.id = :userId", {
         userId: predicate.user.id,
       });
+      queryBuilder.orWhere("post.community.id IN (:...communityIds)", {
+        communityIds: predicate.user.communities.map(c => c.id),
+      });
     } else if ("communities" in predicate) {
       queryBuilder.where("community.id IN (:...communityIds)", {
         communityIds: predicate.communities.map(c => c.id),
@@ -140,7 +143,27 @@ export class PostsService {
     return await this.postsRepository.save(post);
   }
 
-  async findAll(
+  async findAll(): Promise<Post[]> {
+    const publicCommunities = await this.communityRepository.find({
+      where: {
+        isPrivate: false,
+      },
+    });
+
+    return await this.getPosts(
+      {
+        communities: publicCommunities,
+      },
+      {
+        sortBy: SortBy.New,
+        timespan: Timespan.AllTime,
+        take: 100,
+        skip: 0,
+      }
+    );
+  }
+
+  async findAllInCommunity(
     communityId: number,
     filterOptions: FilterOptionsQuery
   ): Promise<Post[]> {

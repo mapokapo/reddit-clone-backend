@@ -83,6 +83,28 @@ export class PostsController {
     type: PostResponse,
     isArray: true,
   })
+  @ApiNotFoundResponse({ description: "Not found" })
+  @ApiOperation({
+    summary: "Find all posts from communities the user can access",
+    operationId: "findAllPosts",
+  })
+  @UseAuth("maybe")
+  @Get("all")
+  async findAll(
+    @ReqMaybeUser() reqMaybeUser: User | null
+  ): Promise<PostResponse[]> {
+    const postEntities = await this.postsService.findAll();
+
+    return postEntities.map(post =>
+      PostResponse.entityToResponse(post, reqMaybeUser ?? undefined)
+    );
+  }
+
+  @ApiOkResponse({
+    description: "OK",
+    type: PostResponse,
+    isArray: true,
+  })
   @ApiOperation({
     summary: "Find all posts by a user",
     operationId: "findAllPostsByUser",
@@ -112,16 +134,16 @@ export class PostsController {
   @ApiNotFoundResponse({ description: "Not found" })
   @ApiOperation({
     summary: "Find all posts in a community",
-    operationId: "findAllPosts",
+    operationId: "findAllPostsInCommunity",
   })
   @UseAuth("maybe")
   @Get("community/:communityId")
-  async findAll(
+  async findAllInCommunity(
     @ReqMaybeUser() reqMaybeUser: User | null,
     @Query() filterOptions: FilterOptionsQuery,
     @Param("communityId", ParseIntPipe) communityId: number
   ): Promise<PostResponse[]> {
-    const postEntities = await this.postsService.findAll(
+    const postEntities = await this.postsService.findAllInCommunity(
       communityId,
       filterOptions
     );
