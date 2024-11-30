@@ -25,6 +25,7 @@ import { Community } from "./entities/community.entity";
 import { UseAuth } from "src/auth/use-auth.decorator";
 import { ReqUser } from "src/auth/req-user.decorator";
 import { User } from "src/users/entities/user.entity";
+import { ReqMaybeUser } from "src/auth/req-maybe-user.decorator";
 
 @ApiTags("communities")
 @Controller("communities")
@@ -49,18 +50,36 @@ export class CommunitiesController {
     return await this.communitiesService.create(reqUser, createCommunityDto);
   }
 
+  @ApiOkResponse({ description: "OK", type: String })
+  @ApiNotFoundResponse({ description: "Community not found" })
+  @ApiOperation({
+    summary: "Check if a user is a member of a community",
+    operationId: "checkUserMembership",
+  })
+  @UseAuth()
+  @Get(":id/membership")
+  async checkUserMembership(
+    @ReqUser() reqUser: User,
+    @Param("id", ParseIntPipe) id: number
+  ): Promise<string> {
+    return await this.communitiesService.checkUserMembership(reqUser, id);
+  }
+
   @ApiOkResponse({
     description: "OK",
     type: Community,
     isArray: true,
   })
   @ApiOperation({
-    summary: "Find all communities",
+    summary: "Find all communities the user can see",
     operationId: "findAllCommunities",
   })
+  @UseAuth("maybe")
   @Get()
-  async findAll(): Promise<Community[]> {
-    return await this.communitiesService.findAll();
+  async findAll(
+    @ReqMaybeUser() reqMaybeUser: User | null
+  ): Promise<Community[]> {
+    return await this.communitiesService.findAll(reqMaybeUser);
   }
 
   @ApiOkResponse({
@@ -87,9 +106,13 @@ export class CommunitiesController {
     summary: "Find a community by ID",
     operationId: "findOneCommunity",
   })
+  @UseAuth("maybe")
   @Get(":id")
-  async findOne(@Param("id", ParseIntPipe) id: number): Promise<Community> {
-    const community = await this.communitiesService.findOne(id);
+  async findOne(
+    @ReqMaybeUser() reqMaybeUser: User | null,
+    @Param("id", ParseIntPipe) id: number
+  ): Promise<Community> {
+    const community = await this.communitiesService.findOne(reqMaybeUser, id);
 
     if (community === null) {
       throw new NotFoundException("Not found");

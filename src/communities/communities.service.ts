@@ -31,8 +31,26 @@ export class CommunitiesService {
     return await this.communityRepository.save(community);
   }
 
-  async findAll(): Promise<Community[]> {
-    return await this.communityRepository.find();
+  async findAll(user: User | null): Promise<Community[]> {
+    const privateCommunitiesTheUserIsAMemberOf =
+      user === null
+        ? []
+        : await this.communityRepository.find({
+            where: {
+              isPrivate: true,
+              members: {
+                id: user.id,
+              },
+            },
+          });
+
+    const publicCommunities = await this.communityRepository.find({
+      where: {
+        isPrivate: false,
+      },
+    });
+
+    return [...privateCommunitiesTheUserIsAMemberOf, ...publicCommunities];
   }
 
   async findUserCommunities(user: User): Promise<Community[]> {
@@ -45,12 +63,42 @@ export class CommunitiesService {
     });
   }
 
-  async findOne(id: number): Promise<Community | null> {
-    return await this.communityRepository.findOne({
+  async findOne(user: User | null, id: number): Promise<Community | null> {
+    const community = await this.communityRepository.findOne({
       where: {
         id,
       },
+      relations: ["members"],
     });
+
+    if (community?.isPrivate === true && user !== null) {
+      if (community.members.some(member => member.id === user.id)) {
+        return community;
+      } else {
+        throw new UnauthorizedException(
+          "You are not a member of this community"
+        );
+      }
+    }
+
+    return community;
+  }
+
+  async checkUserMembership(user: User, id: number): Promise<string> {
+    const community = await this.communityRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["members"],
+    });
+
+    if (community === null) {
+      throw new NotFoundException("Community not found");
+    }
+
+    return community.members.some(member => member.id === user.id)
+      ? "member"
+      : "non-member";
   }
 
   async update(
