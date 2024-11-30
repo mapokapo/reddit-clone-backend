@@ -10,7 +10,7 @@ import { UpdateUserDto } from "./dtos/update-user.dto";
 import { Repository } from "typeorm";
 import { UserDataType } from "./dtos/user-data-type.dto";
 import { Post as PostEntity } from "src/posts/entities/post.entity";
-import { Vote } from "src/votes/vote.entity";
+import { Vote } from "src/votes/entities/vote.entity";
 import { Comment } from "src/comments/entities/comment.entity";
 import { Reply } from "src/replies/entities/reply.entity";
 

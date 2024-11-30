@@ -5,7 +5,7 @@ import { AuthModule } from "src/auth/auth.module";
 import { FirebaseModule } from "src/firebase/firebase.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Reply } from "./entities/reply.entity";
-import { Vote } from "src/votes/vote.entity";
+import { Vote } from "src/votes/entities/vote.entity";
 import { Comment } from "src/comments/entities/comment.entity";
 import { UsersModule } from "src/users/users.module";
 

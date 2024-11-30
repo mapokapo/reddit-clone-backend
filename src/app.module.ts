@@ -9,7 +9,7 @@ import { CommunitiesModule } from "./communities/communities.module";
 import { Community } from "./communities/entities/community.entity";
 import { PostsModule } from "./posts/posts.module";
 import { Post } from "./posts/entities/post.entity";
-import { Vote } from "./votes/vote.entity";
+import { Vote } from "./votes/entities/vote.entity";
 import { FirebaseModule } from "./firebase/firebase.module";
 import { AppService } from "./app.service";
 import { SeederModule } from "./seeder/seeder.module";

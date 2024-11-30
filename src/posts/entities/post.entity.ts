@@ -2,7 +2,7 @@ import { Exclude } from "class-transformer";
 import { Comment } from "src/comments/entities/comment.entity";
 import { Community } from "src/communities/entities/community.entity";
 import { User } from "src/users/entities/user.entity";
-import { Vote } from "src/votes/vote.entity";
+import { Vote } from "src/votes/entities/vote.entity";
 import {
   Column,
   CreateDateColumn,

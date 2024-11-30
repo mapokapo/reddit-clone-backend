@@ -11,7 +11,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Comment } from "./entities/comment.entity";
 import { Repository, TreeRepository } from "typeorm";
 import { Post } from "src/posts/entities/post.entity";
-import { Vote } from "src/votes/vote.entity";
+import { Vote } from "src/votes/entities/vote.entity";
 import {
   FilterOptionsQuery,
   SortBy,

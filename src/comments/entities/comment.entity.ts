@@ -3,7 +3,7 @@ import { Exclude, Expose, Transform } from "class-transformer";
 import { Post } from "src/posts/entities/post.entity";
 import { Reply } from "src/replies/entities/reply.entity";
 import { User } from "src/users/entities/user.entity";
-import { Vote } from "src/votes/vote.entity";
+import { Vote } from "src/votes/entities/vote.entity";
 import {
   Column,
   CreateDateColumn,

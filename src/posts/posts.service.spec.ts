@@ -6,7 +6,7 @@ import { Repository } from "typeorm";
 import { User } from "src/users/entities/user.entity";
 import { Community } from "src/communities/entities/community.entity";
 import { NotFoundException } from "@nestjs/common";
-import { Vote } from "src/votes/vote.entity";
+import { Vote } from "src/votes/entities/vote.entity";
 
 describe("PostsService", () => {
   let service: PostsService;
