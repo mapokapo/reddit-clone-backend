@@ -138,6 +138,7 @@ export class UsersService {
             id: userId,
           },
         },
+        relations: ["author", "community", "votes"],
       });
 
       data = data.concat(posts);
@@ -150,6 +151,7 @@ export class UsersService {
             id: userId,
           },
         },
+        relations: ["author", "post", "votes", "replies"],
       });
 
       data = data.concat(comments);
@@ -162,6 +164,7 @@ export class UsersService {
             id: userId,
           },
         },
+        relations: ["post", "comment", "voter", "reply"],
       });
 
       data = data.concat(votes);
@@ -174,6 +177,7 @@ export class UsersService {
             id: userId,
           },
         },
+        relations: ["author", "comment", "votes"],
       });
 
       data = data.concat(replies);

@@ -28,13 +28,14 @@ import { ReqIdToken } from "src/auth/req-id-token.decorator";
 import { User } from "./entities/user.entity";
 import { Post as PostEntity } from "src/posts/entities/post.entity";
 import { ReqUser } from "src/auth/req-user.decorator";
-import { GetUserDataQuery } from "./transport/get-user-data.query";
-import { Vote } from "src/votes/vote.entity";
+import { Vote } from "src/votes/entities/vote.entity";
 import { PostResponse } from "src/posts/transport/post.response";
 import { CommentResponse } from "src/comments/transport/comment.response";
 import { ReplyResponse } from "src/replies/transport/reply.response";
 import { Comment } from "src/comments/entities/comment.entity";
 import { Reply } from "src/replies/entities/reply.entity";
+import { UserDataType } from "./dtos/user-data-type.dto";
+import { VoteResponse } from "src/votes/transport/vote.response";
 
 @ApiTags("users")
 @Controller("users")
@@ -93,12 +94,11 @@ export class UsersController {
   async getUserData(
     @Param("userId", new ParseIntPipe()) userId: number,
     @ReqUser() reqUser: User,
-    @Query() query: GetUserDataQuery
-  ): Promise<(PostResponse | CommentResponse | ReplyResponse | Vote)[] | null> {
-    const data = await this.usersService.getUserData(
-      userId,
-      query.include ?? []
-    );
+    @Query("include") include: UserDataType[]
+  ): Promise<
+    (PostResponse | CommentResponse | ReplyResponse | VoteResponse)[] | null
+  > {
+    const data = await this.usersService.getUserData(userId, include);
 
     if (data === null) {
       return null;
@@ -112,7 +112,7 @@ export class UsersController {
       } else if (item instanceof Comment) {
         return CommentResponse.entityToResponse(item, reqUser);
       } else {
-        return item;
+        return VoteResponse.entityToResponse(item);
       }
     });
   }
