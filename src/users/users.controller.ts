@@ -68,20 +68,6 @@ export class UsersController {
     return await this.usersService.create(createUserDto);
   }
 
-  @ApiOkResponse({ description: "OK", type: User })
-  @ApiNoContentResponse({ description: "No content" })
-  @ApiOperation({
-    summary: "Get the current user",
-    description:
-      "This endpoint is used by the client to get the current user. Returns 204 if the authenticated user doesn't have a profile.",
-    operationId: "getMe",
-  })
-  @UseAuth("no-profile")
-  @Get("me")
-  async getMe(@ReqIdToken() reqIdToken: DecodedIdToken): Promise<User | null> {
-    return await this.usersService.findOneByFirebaseUid(reqIdToken.uid);
-  }
-
   @ApiExtraModels(Vote)
   @ApiOkResponse({
     description: "OK",
@@ -97,19 +83,20 @@ export class UsersController {
     isArray: true,
   })
   @ApiOperation({
-    summary: "Get aggregated user data for the current user",
+    summary: "Get aggregated user data for a user",
     description:
-      "This endpoint is used by the client to get user data such as posts, comments, and votes for the current user.",
+      "This endpoint is used by the client to get user data such as posts, comments, and votes for a user.",
     operationId: "getUserData",
   })
   @UseAuth()
-  @Get("userdata")
+  @Get("userdata/:userId")
   async getUserData(
+    @Param("userId", new ParseIntPipe()) userId: number,
     @ReqUser() reqUser: User,
     @Query() query: GetUserDataQuery
   ): Promise<(PostResponse | CommentResponse | ReplyResponse | Vote)[] | null> {
     const data = await this.usersService.getUserData(
-      reqUser,
+      userId,
       query.include ?? []
     );
 
@@ -128,6 +115,20 @@ export class UsersController {
         return item;
       }
     });
+  }
+
+  @ApiOkResponse({ description: "OK", type: User })
+  @ApiNoContentResponse({ description: "No content" })
+  @ApiOperation({
+    summary: "Get the current user",
+    description:
+      "This endpoint is used by the client to get the current user. Returns 204 if the authenticated user doesn't have a profile.",
+    operationId: "getMe",
+  })
+  @UseAuth("no-profile")
+  @Get("me")
+  async getMe(@ReqIdToken() reqIdToken: DecodedIdToken): Promise<User | null> {
+    return await this.usersService.findOneByFirebaseUid(reqIdToken.uid);
   }
 
   @ApiOkResponse({ description: "OK", type: User })

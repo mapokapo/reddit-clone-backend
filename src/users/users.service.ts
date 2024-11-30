@@ -126,7 +126,7 @@ export class UsersService {
   }
 
   async getUserData(
-    user: User,
+    userId: number,
     include: UserDataType[]
   ): Promise<(PostEntity | Comment | Reply | Vote)[] | null> {
     let data: (PostEntity | Comment | Reply | Vote)[] = [];
@@ -135,7 +135,7 @@ export class UsersService {
       const posts = await this.postRepository.find({
         where: {
           author: {
-            id: user.id,
+            id: userId,
           },
         },
       });
@@ -147,7 +147,7 @@ export class UsersService {
       const comments = await this.commentRepository.find({
         where: {
           author: {
-            id: user.id,
+            id: userId,
           },
         },
       });
@@ -159,7 +159,7 @@ export class UsersService {
       const votes = await this.voteRepository.find({
         where: {
           voter: {
-            id: user.id,
+            id: userId,
           },
         },
       });
@@ -171,7 +171,7 @@ export class UsersService {
       const replies = await this.repliesRepository.find({
         where: {
           author: {
-            id: user.id,
+            id: userId,
           },
         },
       });
