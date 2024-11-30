@@ -8,7 +8,7 @@ import { CreatePostDto } from "./dtos/create-post.dto";
 import { UpdatePostDto } from "./dtos/update-post.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Post } from "./entities/post.entity";
-import { In, Not, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import { User } from "src/users/entities/user.entity";
 import { Community } from "src/communities/entities/community.entity";
 import { Vote } from "src/votes/vote.entity";
@@ -71,10 +71,20 @@ export class PostsService {
 
     const queryBuilder = this.postsRepository
       .createQueryBuilder("post")
+      .leftJoinAndSelect("post.community", "community")
+      .leftJoinAndSelect("post.author", "author")
       .leftJoinAndSelect("post.votes", "vote")
       .leftJoinAndSelect("vote.voter", "voter")
-      .leftJoinAndSelect("post.community", "community")
-      .leftJoinAndSelect("post.author", "author");
+      // post score (number of positive votes - number of negative votes)
+      .addSelect(qb => {
+        return qb
+          .select(
+            "COALESCE(SUM(CASE WHEN vote.isUpvote = 1 THEN 1 ELSE -1 END), 0)",
+            "score"
+          )
+          .from("vote", "vote")
+          .where("vote.postId = post.id");
+      }, "score");
 
     if ("user" in predicate) {
       queryBuilder.where("post.author.id = :userId", {
@@ -95,13 +105,7 @@ export class PostsService {
     if (sortBy === SortBy.New) {
       queryBuilder.orderBy("post.createdAt", "DESC");
     } else {
-      queryBuilder
-        .addSelect(
-          "SUM(CASE WHEN vote.isUpvote = 1 THEN 1 ELSE -1 END)",
-          "voteValue"
-        )
-        .groupBy("vote.id")
-        .orderBy("voteValue", "DESC");
+      queryBuilder.orderBy("score", "DESC");
     }
 
     return await queryBuilder.skip(skip).take(take).getMany();
@@ -187,49 +191,6 @@ export class PostsService {
       filterOptions
     );
 
-    if (posts.length < 10) {
-      const newestCommunities = await this.communityRepository.find({
-        order: {
-          createdAt: "DESC",
-        },
-        take: 10 - posts.length,
-        where: {
-          isPrivate: false,
-        },
-      });
-
-      const newestPosts = (
-        await Promise.all(
-          newestCommunities.map(
-            async community =>
-              await this.postsRepository.find({
-                where: {
-                  community: {
-                    id: community.id,
-                  },
-                  id: Not(In(posts.map(post => post.id))),
-                },
-                order: {
-                  createdAt: "DESC",
-                },
-                take: 1,
-              })
-          )
-        )
-      ).flat();
-
-      if (filterOptions.sortBy === SortBy.Top) {
-        newestPosts.sort(
-          (a, b) =>
-            b.votes.filter(vote => vote.isUpvote).length -
-            b.votes.filter(vote => !vote.isUpvote).length -
-            (a.votes.filter(vote => vote.isUpvote).length -
-              a.votes.filter(vote => !vote.isUpvote).length)
-        );
-      }
-
-      posts.push(...newestPosts);
-    }
     return posts;
   }
 
