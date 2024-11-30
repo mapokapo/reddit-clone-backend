@@ -28,7 +28,6 @@ import { ReqIdToken } from "src/auth/req-id-token.decorator";
 import { User } from "./entities/user.entity";
 import { Post as PostEntity } from "src/posts/entities/post.entity";
 import { ReqUser } from "src/auth/req-user.decorator";
-import { Vote } from "src/votes/entities/vote.entity";
 import { PostResponse } from "src/posts/transport/post.response";
 import { CommentResponse } from "src/comments/transport/comment.response";
 import { ReplyResponse } from "src/replies/transport/reply.response";
@@ -69,7 +68,7 @@ export class UsersController {
     return await this.usersService.create(createUserDto);
   }
 
-  @ApiExtraModels(Vote)
+  @ApiExtraModels(VoteResponse)
   @ApiOkResponse({
     description: "OK",
     schema: {
@@ -77,7 +76,9 @@ export class UsersController {
       items: {
         anyOf: [
           { $ref: getSchemaPath(PostResponse) },
-          { $ref: getSchemaPath(Vote) },
+          { $ref: getSchemaPath(CommentResponse) },
+          { $ref: getSchemaPath(ReplyResponse) },
+          { $ref: getSchemaPath(VoteResponse) },
         ],
       },
     },
