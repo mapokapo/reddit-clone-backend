@@ -8,7 +8,7 @@ import { CreatePostDto } from "./dtos/create-post.dto";
 import { UpdatePostDto } from "./dtos/update-post.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Post } from "./entities/post.entity";
-import { Repository } from "typeorm";
+import { In, Not, Repository } from "typeorm";
 import { User } from "src/users/entities/user.entity";
 import { Community } from "src/communities/entities/community.entity";
 import { Vote } from "src/votes/vote.entity";
@@ -207,6 +207,7 @@ export class PostsService {
                   community: {
                     id: community.id,
                   },
+                  id: Not(In(posts.map(post => post.id))),
                 },
                 order: {
                   createdAt: "DESC",
