@@ -159,6 +159,14 @@ export class CommentsService {
       where: {
         id,
       },
+      relations: {
+        author: true,
+        post: true,
+        votes: {
+          voter: true,
+        },
+        replies: true,
+      },
     });
   }
 
